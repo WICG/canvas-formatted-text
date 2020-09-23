@@ -135,7 +135,7 @@ context.fillFormattedText( formattedText, /*x*/0, /*y*/50, /*wrapWidth*/250 );
 
 This would produce the following output on the canvas:
 
-<img src="Example1.png" alt="Wrapped text rendered in a canvas." align="center"/>
+<img src="explainerresources/Example1.png" alt="Wrapped text rendered in a canvas." align="center"/>
 
 ### Bidi Text
 
@@ -153,7 +153,7 @@ context.fillFormattedText( canvasFormattedText, /*x*/0, /*y*/30, /*wrapWidth*/35
 
 produces the following output on the canvas:
 
-<img src="Example2.png" alt="Wrapped text rendered in a canvas." align="center"/>
+<img src="explainerresources/Example2.png" alt="Wrapped text rendered in a canvas." align="center"/>
 
 ### Pre-existing text controls
 
@@ -291,7 +291,7 @@ do {
 
 This would produce the following output on the canvas
 
-<img src="Available-Width.png" alt="Example use case for rendering multiline text with varying available width" align="center" style="border:2px solid black;"/>
+<img src="explainerresources/Available-Width.png" alt="Example use case for rendering multiline text with varying available width" align="center" style="border:2px solid black;"/>
 
 The separation of measuring to obtain a `CanvasFormattedTextLine` object and the request to
 draw the line using `fillFormattedTextLine` or `strokeFormattedTextLine` allows for a
