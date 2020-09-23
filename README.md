@@ -478,7 +478,7 @@ and thoughts on the related open issues.
 ## Privacy Considerations
 
 HTML5 canvas is a browser finger printing vector
-(see [canvas fingerprinting](https://en.wikipedia.org/wiki/>Canvas_fingerprinting)).
+(see [canvas fingerprinting](https://en.wikipedia.org/wiki/Canvas_fingerprinting)).
 Fingerprinting happens through APIs `getImageData`, `toDataURL`, etc. that allow
 readback of renderer content exposing machine specific rendering artifacts.
 This proposal adds the ability to render multiple lines of text, potential
