@@ -101,6 +101,7 @@ get lots of feedback.
 * [HTML Canvas API and TextMetrics](https://html.spec.whatwg.org/multipage/canvas.html#drawing-text-to-the-bitmap)
 * [SVG Text](https://svgwg.org/svg2-draft/text.html)
 * [Proposed Canvas Text Modifiers](https://github.com/fserb/canvas2D/blob/master/spec/text-modifiers.md)
+* [CSS Houdini Font Metrics API](https://drafts.css-houdini.org/font-metrics-api/)
 * [CSS Houdini Box Tree API](https://drafts.css-houdini.org/box-tree-api-1/)
 * [Other platforms for drawing formatted text](https://docs.microsoft.com/en-us/dotnet/framework/wpf/advanced/drawing-formatted-text)
 
