@@ -27,7 +27,7 @@ inherit down to the `FormattedTextRun`s.
 To maximize authoring convenience, we are proposing using the ObserverableArray pattern in order
 to allow authors to manage the contained array exactly like a JavaScript Array.
 
-(image of the data model here)
+<img src="explainerresources/formatted-text-om.png" alt="FormattedText object holds an array of FormattedTextRun objects through a property called 'textruns'." align="center"/>
 
 ## Creating FormattedText and FormattedTextRun objects
 
