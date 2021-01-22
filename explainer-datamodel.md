@@ -10,6 +10,24 @@ additional explainers for [how to render it](explainer-rendering.md) and
 
 ## Providing an input model for formatted text
 
+On the web today, if you want to render text, you essentially have two options (generally): use
+the DOM (HTML's CharacterData/Text nodes or SVG Text-related Elements), in which case you put the
+text into the "retained" mode infrastructure of the web platform and it decides when and how
+to compose and render the text with declarative input from you (in the form of CSS); or you can
+use Canvas and "write" the text when and how you want with JavaScript (an "immediate" mode 
+approach). The Canvas provides very limited text support today and (by design) leaves any special
+formatting, text wrapping, international support, etc., up to the JavaScript author.
+
+We propose a hybrid approach that allows the author to retain the benefits of the DOM's "retained"
+mode objects, reusing the web platform's existing line formatting and wrapping engine along with 
+support for CSS, while also enabling authors to apply the objects to a Canvas how and when they
+choose. Alternately, authors may not desire to render the objects to a Canvas at all, and instead
+can run a given layout over them to obtain metrics useful in other scenarios.
+
+In this explainer, a new formatted text data model is presented (the "retained" mode objects) which
+is the minimal necessary objects to allow CSS-styled text runs to be collected in a sequence
+for layout processing.
+
 ### Principles
 * An imperative JavaScript-friendly text representation.
 * Scope to the needs of inline text layout.
