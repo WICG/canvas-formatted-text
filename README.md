@@ -96,6 +96,7 @@ the text to be rendered at all).
 This proposal builds on a variety of existing and proposed specifications in the 
 web platform, for whose efforts we are very grateful, and from whom we expect to
 get lots of feedback.
+* [CSS Text 3](https://drafts.csswg.org/css-text-3/)
 * [CSS Inline Layout 3](https://drafts.csswg.org/css-inline-3/)
 * [CSS Houdini Layout API](https://drafts.css-houdini.org/css-layout-api-1/)
 * [HTML Canvas API and TextMetrics](https://html.spec.whatwg.org/multipage/canvas.html#drawing-text-to-the-bitmap)
