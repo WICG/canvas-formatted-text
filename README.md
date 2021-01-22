@@ -1,6 +1,6 @@
 Formatted Text
 =============
-An imperative approach to multi-line text; its data model, rendering, and metrics.
+An imperative approach to multi-line formatted text; its data model, rendering, and metrics.
 
 ## Introduction & Challenges
 
