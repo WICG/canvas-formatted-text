@@ -1,7 +1,7 @@
 Formatted Text - Data Model
 =============
 An object model for describing multi-line formatted text that does not use DOM Text 
-nodes or SVG elements (does not require DOM).
+nodes or Elements (does not require DOM).
 
 This explainer focuses on the data model for formatted text. For a general overview 
 of the problem space, see the repo's [readme](README.md). Given this data model, there are 
@@ -17,28 +17,88 @@ additional explainers for [how to render it](explainer-rendering.md) and
 * Avoid multi-level hierarchal text structures (which must be linearly iterated for rendering anyway)
 * Object-centric model (versus range+indexes) to improve encapsulation and avoid problems with overlapping formatting.
 
-### FormattedText and text runs
+### Primary Objects
 
 The data model for formatted text is quite simple and involves only two objects: `FormattedText`
 is a container that orders a list of `FormattedTextRun` objects that contain the actual text and
 formatting information. (The `FormattedText` container can also have formatting applied that may
-inherit down to the `FormattedTextRun`s.
+inherit down to the `FormattedTextRun`s.)
 
-To maximize authoring convenience, we are proposing using the ObserverableArray pattern in order
-to allow authors to manage the contained array exactly like a JavaScript Array.
+To maximize authoring convenience, we are proposing using the 
+[ObserverableArray pattern](https://heycam.github.io/webidl/#idl-observable-array) to allow authors
+to manage the contained array exactly like a JavaScript Array.
 
 <img src="explainerresources/formatted-text-om.png" alt="FormattedText object holds an array of FormattedTextRun objects through a property called 'textruns'." align="center"/>
 
 ## Creating FormattedText and FormattedTextRun objects
 
+`FormattedText` and `FormattedTextRun` objects are created using the 'new' pattern:
 
+```js
+let text = new FormattedText();
+let textrun = new FormattedTextRun();
+```
+
+Attach `FormattedTextRun` objects to their `FormattedText` object's `textruns` property (an Array):
+
+```js
+text.textruns.push( textrun );
+```
+
+Add text to the `FormattedTextRun` object:
+
+```js
+textrun.text = "hello";
+```
+
+To simplify creation of a `FormattedText` object and its textruns, the constructors also supports
+various overloads:
+
+```js
+let text = new FormattedText("hello", " world");
+// equivalent to:
+let text = new FormattedText();
+text.textruns.push( new FormattedTextRun( {text: "hello"} ) );
+text.textruns.push( new FormattedTextRun( {text: " world"} ) );
+// make a copy of all the text runs from another FormattedText object to be included in a new one:
+let text2 = new FormattedText( text.textruns );
+// copy everything from another FormattedText object and its text runs
+let text3 = new FormattedText( text2 );
+```
+
+## Common Styles
+
+`FormattedTextRun` objects have two styling shortcuts that can be set at contruction time:
+* **font** - Any string accepted by the CSS text of the *font* property
+* **color** - Any string accepted by the CSS text of the *color* property
+
+```js
+let textrun2 = new FormattedTextRun( { text: "hello, I'm green with envy", font: "20pt Courier", color: "#00FF00" } );
+```
+These values can also be read and changed after the object is created:
+
+```js
+textrun2.font = "10pt Courier";
+textrun2.color = "#00CC00";
+```
 
 ## CSS Styling of FormattedText and text runs
-What's possible and what's not, for both the FormattedText and for its text runs.
+A wide range of inline layout-related CSS is supported on both the `FormattedText` and
+`FormattedTextRun` objects.
 
-A FormattedText object represents a block container in CSS that establishes 
-an *inline formatting context* for it's content.
+To set these use the `styleMap` property (just like in HTML):
 
+```js
+textrun2.styleMap.set("text-decoration", "underline");
+```
+
+The `styleMap` property is available on both the `FormattedText` and `FormattedTextRun` objects.
+
+It is also possible to set multiple styles at once similar to how HTML parses the `style` attribute:
+
+```js
+textrun2.setStyle( "color: yellow; font: 15pt Verdana" );
+```
 
 ### Cascading of values from FormattedText to text runs
 CSS properties applied to the style map from the FormattedText that are specified to inherit
@@ -46,26 +106,16 @@ from parent to child will do so from the FormattedText to it's text run child ob
 
 ## Simple Example
 
-Consider a use case where a web developer wants to eventually render the text “the quick
-**brown** fox jumps over the lazy dog” into a horizontal space 250px wide and have
-the text wrap instead of compress-to-fit. In order to enable
-this scenario, we introduce a new object `CanvasFormattedText` which will keep track
-of all the formatted text. We also introduce two new formatted text drawing APIs onto
-the canvas context: `strokeFormattedText` and `fillFormattedText`.
-
-First we will consider how to represent the bolded text in the example above?
-Regular HTML uses markup elements to style parts of text. For the 2d Canvas API
-we split the text into "runs" and allow each run to have its own optional formatting:
+In this example, we create a `FormattedText` object and its text runs that we eventually 
+want to render with the text "the quick **brown** fox jumps over the lazy dog" where the
+word "brown" is colored brown and bold. In the [next explainer](explainer-rendering.md) we
+add layout constraints and render it to a canvas so that the text will also wrap at the 
+appropriate word boundaries.
 
 ```js
-const c = document.getElementById( "myCanvas" );
-const context = c.getContext( "2d" );
-
-// Collect text into a CanvasFormattedText object
-let formattedText = new CanvasFormattedText();
-formattedText.appendRun( { text: "the quick " } );
-formattedText.appendRun( { text: "brown", font: `bold ${ context.font }` } );
-formattedText.appendRun( { text: " fox jumps over the lazy dog" } );
+// Collect text into a FormattedText object
+let formattedText = new FormattedText( "the quick ", "brown", " fox jumps over the lazy dog" );
+formattedText.textruns[1].setStyle( "color: brown; font-weight: bold" );
 ```
 
 ## CSS to achieve advanced scenarios
@@ -82,13 +132,62 @@ Show example
 
 Show example
 
+## WebIDL (for nerds and implementers)
+
+```webidl
+[Exposed=Window,Worker] 
+interface FormattedText { 
+  constructor();
+  constructor(DOMString textRunText...);
+  constructor(sequence<FormattedTextRunInit> textRunInit);
+  constructor(FormattedText copyConstructorInit);
+
+  attribute ObservableArray<FormattedTextRun> textruns; 
+}; 
+FormattedText includes FormattedTextStylable; 
+
+dictionary FormattedTextRunInit { 
+  DOMString text = ""; 
+  DOMString font = "";
+  DOMString color = "";
+}; 
+
+[Exposed=Window,Worker] 
+interface FormattedTextRun { 
+  constructor();
+  constructor(DOMString text);
+  constructor(FormattedTextRunInit textRunInit);
+
+  attribute DOMString text; 
+  attribute DOMString font; 
+  attribute DOMString color; 
+
+  // owning FormattedText (if any) 
+  readonly attribute FormattedText? owner;         // null if not contained in a FormattedText
+ 
+  // navigation in the array 
+  readonly attribute FormattedTextRun? next;       // null if last or not contained in FormattedText
+  readonly attribute FormattedTextRun? previous;   // null if first or not contained in FormattedText
+}; 
+FormattedTextRun includes FormattedTextStylable; 
+ 
+interface mixin FormattedTextStylable { 
+  [SameObject] readonly attribute StylePropertyMap styleMap;
+  void setStyle(USVString cssText);
+}; 
+```
+
+## Supported CSS on FormattedText and text runs
+
+What's possible and what's not, for both the FormattedText and for its text runs.
+
+| CSS Property | FormattedText | FormattedTextRun |
+|--------------|---------------|------------------|
+| text-decoration |            | ✔ |
+
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
 text and make is show up on screen.
-
-
-
-
 
 ## Authors:
  [sushraja-msft](https://github.com/sushraja-msft),
