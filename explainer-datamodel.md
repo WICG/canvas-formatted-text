@@ -125,15 +125,36 @@ from parent to child will do so from the FormattedText to it's text run child ob
 ## Simple Example
 
 In this example, we create a `FormattedText` object and its text runs that we eventually 
-want to render with the text "the quick **brown** fox jumps over the lazy dog" where the
-word "brown" is colored brown and bold. In the [next explainer](explainer-rendering.md) we
-add layout constraints and render it to a canvas so that the text will also wrap at the 
-appropriate word boundaries.
+want to render with the text "The quick **brown** fox jumps over the lazy dog" where the
+word "brown" is colored brown and bold. In the [rendering explainer](explainer-rendering.md) we
+add layout constraints and render it to a canvas; at present, while it resides in the data model
+it has no associated layout.
 
 ```js
 // Collect text into a FormattedText object
-let formattedText = new FormattedText( "the quick ", "brown", " fox jumps over the lazy dog" );
+let formattedText = new FormattedText( "The quick ", "brown", " fox jumps over the lazy dog" );
 formattedText.textruns[1].setStyle( "color: brown; font-weight: bold" );
+```
+
+The above is the semantic equivlant to the following declarative HTML markup:
+
+```html
+<div>
+  The quick <span style="color: brown; font-weight: bold">brown</span> fox jumps over the lazy dog
+</div>
+```
+
+Where the `<div>` element is the container for an inline formatting context (and can be styled), 
+and the `<span>` contains the formatting for the word "brown". More precisely, since each 
+`FormattedTextRun` object can be styled, the following markup better represents the semantic 
+equivalent:
+
+```html
+<div>
+  <span>The quick </span>
+  <span style="color: brown; font-weight: bold">brown</span>
+  <span> fox jumps over the lazy dog</span>
+</div>
 ```
 
 ## CSS to achieve advanced scenarios
