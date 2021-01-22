@@ -4,9 +4,9 @@ An object model for describing multi-line formatted text that does not use DOM T
 nodes or SVG elements (does not require DOM).
 
 This explainer focuses on the data model for formatted text. For a general overview 
-of the problem space, see the repo's [README.md]. Given this data model, there are 
+of the problem space, see the repo's [[README.md]]. Given this data model, there are 
 additional explainers for [how to render it](explainer-rendering.md) and 
-[how to compute metrics for it](explainer-metrics.md).
+[how to obtain metrics from it](explainer-metrics.md).
 
 ## Providing an input model for formatted text
 
