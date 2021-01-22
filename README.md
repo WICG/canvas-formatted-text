@@ -111,8 +111,8 @@ We will be pursing consensus on each of the three aspects of the formatted text
 problem space, starting with the data model and then detailing how it can be rendered
 and how it's metrics can be extracted:
 * [Formatted Text Data Model](explainer-datamodel.md)
-   * [Formatted Text Rendering](explainer-rendering.md)
-   * [Formatted Text Metrics](explainer-metrics.md)
+* [Formatted Text Rendering](explainer-rendering.md)
+* [Formatted Text Metrics](explainer-metrics.md)
 
 # Contributors:
 
