@@ -1,6 +1,8 @@
 Formatted Text
 =============
-An imperative approach to multi-line formatted text; its data model, rendering, and metrics.
+An imperative approach to multi-line formatted text; its 
+[data model](explainer-datamodel.md), [rendering](explainer-rendering.md), and
+[metrics](explainer-metrics.md).
 
 ## Introduction & Challenges
 
@@ -114,6 +116,67 @@ and how it's metrics can be extracted:
 * [Formatted Text Data Model](explainer-datamodel.md)
 * [Formatted Text Rendering](explainer-rendering.md)
 * [Formatted Text Metrics](explainer-metrics.md)
+
+## Open issues and questions
+
+Please review and comment on our [existing open issues](https://github.com/WICG/canvas-formatted-text/issues).
+
+## Alternatives Considered
+
+### Intermediate line objects
+In a previous iteration of this proposal, we called for a "simple" and "advanced"
+model for rendering formatted text to the canvas. The advanced model allowed authors
+to place arbitrary lines by alternately measuring a part of the data model and then
+rendering the resulting "line" metrics object.
+
+Under that design, we were assuming that authors would want to cache and re-use the
+line objects that were produced. If authors would not re-use these objects, then no
+optimization could be made for performance (since we were letting authors do the 
+fragmentation themselves). For simple use cases where the canvas will be re-painted
+without changes, having authors cache and reuse line objects seemed a reasonable 
+request. However, if authors decide to only re-paint the canvas when things change, 
+then to recapture performance, authors are left to implement their own line invalidation
+logic or to just throw away all the lines and start from scratch--the worst-case scenario
+for performance. 
+
+We thought about addressing this concern by adding a "dirty" flag to lines that have been
+invalidated to help the author create an efficient invalidation scheme. But line analysis 
+and caching logic has never been exposed to authors before in the web platform, and we
+didn't want to create a feature with this foot-gun. The advanced use case was primarily
+about enabling occusions and supporting things like floaters obstructing lines, and CSS
+already has standards for those scenarios--when we decided to embrace more CSS constructs
+for this feature, it was decided that the advanced use case could be dropped entirely.
+
+### Imperative model
+The proposal here addresses two separate problems. One of styling ranges of text
+and having an object model and two of auto wrapping text.
+
+An alternative design considered was to support auto wrapping without requiring
+that the developer provides all the text upfront. Similar to canvas path, the
+developer would call `setTextWrapWidth( availableWidth )` and follow through with
+multiple calls to `fillText` on the canvas context that renders text and advances
+a cursor forward.
+
+Such an imperative style API was not pursued for two reasons. With bidi text, the
+entire width of a right-to-left segment needs to be determined before any of the
+`fillText` calls can be rendered. This issue can be addressed by adding a finalization
+step say `finalizeFillText()`. However still, such an imperative API adds a performance
+cost in terms of recreating the formatted text when the developer is simply trying to
+redraw the same text content for a changing available width.
+
+## Privacy Considerations
+
+HTML5 canvas is a browser fingerprinting vector
+(see [canvas fingerprinting](https://en.wikipedia.org/wiki/Canvas_fingerprinting)).
+Fingerprinting happens through APIs `getImageData`, `toDataURL`, etc. that allow
+readback of renderer content exposing machine specific rendering artifacts.
+This proposal adds the ability to render multiple lines of text, potential
+differences in text wrapping across browsers could contribute to additional
+fingerprinting. The existing implementer mitigations in some user agents that
+prompt users on canvas readback continues to work here.
+
+We are currently evaluating whether this API would increase fingerprinting surface
+area and will update this section with our findings. We welcome any community feedback.
 
 # Contributors:
 
