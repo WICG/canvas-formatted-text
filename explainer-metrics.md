@@ -26,3 +26,33 @@ support them.
 
 TBD
 
+
+
+
+## Accessibility Considerations for Metrics
+
+Regarding the metrics needed to make text fully accessible
+to an AT (which may become future requirements for canvas) we envision the following needs
+(partially met by this proposal):
+
+Note: the following needs updates:
+
+* Word bounds/breaks - used to support "navigate by word" AT features. Break opportunities
+  (in HTML) are calculated as part of layout, and as part of the `fillFormattedText`,
+  `strokeFormattedText` and `measureFormattedText` APIs to find where line breaks will be
+  possible. However, the meta-data about these break opportunities are not exposed to the
+  developer.
+* Character bounds - used by ATs for character-by-character navigation. The
+  `CanvasFormattedTextLineSegment` surfaces `TextMetrics` that will include an `advances`
+  array of positions used to describe character bounds.
+* Format boundaries - provide opportunities for the AT to optionally add emphasis or
+  pass over certain runs of text. The developer has already separated ranges of
+  similarly-formatted runs of text into `CanvasFormattedTextRun`s which can be iterated at
+  any time to calculate the offset positions to meet this requirement.
+
+We are interested in hearing about additional community feedback related to accessibility
+and thoughts on the related open issues.
+
+## Authors:
+ [sushraja-msft](https://github.com/sushraja-msft),
+ [travisleithead](https://github.com/travisleithead)
