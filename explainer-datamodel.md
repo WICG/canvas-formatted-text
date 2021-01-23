@@ -323,6 +323,6 @@ sense. We welcome your comments and issues in this regard.
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
 text and make is show up on screen.
 
-## Authors:
+## Contributors:
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
