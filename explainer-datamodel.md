@@ -146,8 +146,8 @@ The above is the semantic equivlant to the following declarative HTML markup:
 
 Where the `<div>` element is the container for an inline formatting context (and can be styled), 
 and the `<span>` contains the formatting for the word "brown". More precisely, since each 
-`FormattedTextRun` object can be styled, the following markup better represents the semantic 
-equivalent:
+`FormattedTextRun` object has the potential to be styled, the following markup better represents 
+the semantic equivalent:
 
 ```html
 <div>
@@ -161,7 +161,36 @@ equivalent:
 
 ### Vertical Text
 
-Show example
+By leveraging existing CSS styles for writing modes and other related properties, the 
+formatted text data model can support a variety of vertical text scenarios. For 
+example, by simply leveraging the `writing-mode` property on the `FormattedText` 
+object, we can orient text in its traditional vertical direction:
+
+```js
+let proverb = new FormattedText( "不怕慢，", "就怕站" );
+proverb.styleMap.set( "writing-mode", "vertical-rl" );
+proverb.textruns[1].styleMap.set( "font-weight", "bold" );
+```
+
+Together with a nice font and constrained vertical layout bounds, this would render as:
+
+<img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient chineese proverb, vertically oriented in two columns, the second column bold">
+
+In combination with other related CSS properties, many other vertical text layouts are
+possible:
+
+```js
+let proverbEn = new FormattedText( "It's better to make slow progress", " than no progress at all" );
+proverbEn.styleMap.set( "writing-mode", "vertical-lr" );
+proverbEn.styleMap.set( "text-orientation", "upright" );
+proverbEn.styleMap.set( "line-height", "2" );
+proverbEn.styleMap.set( "text-align", "center" );
+proverbEn.textruns[1].styleMap.set( "font-weight", "bold" );
+```
+
+When rendered in an inline-direction constrained space, this would render as:
+
+<img src="explainerresources/vertical-text-en.png" alt="The text 'It's better to make slow progress than no progress at all' rendered vertically from left-to-right in five columns">
 
 ### Occlusions/ Non-rectangular wrapping
 
