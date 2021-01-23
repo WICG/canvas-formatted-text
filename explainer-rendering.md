@@ -59,7 +59,27 @@ CSS styles on the canvas element affect text rendering. These CSS properties are
 
 ## WebIDL (for nerds and implementers)
 
-TBD
+```webidl
+partial interface CanvasText { 
+  // Perform layout and render FormattedText
+  void fillFormattedText(FormattedText formattedText, 
+                         double x, 
+                         double y, 
+                         double inlineSize, 
+                         optional FormattedTextOptions options); 
+
+  void strokeFormattedText(FormattedText formattedText, 
+                           double x, 
+                           double y, 
+                           double inlineSize, 
+                           optional FormattedTextOptions options); 
+}; 
+ 
+// Dictionary for future extensibility for layout/canvas integration features
+dictionary FormattedTextOptions { 
+  double blockSize;
+}; 
+```
 
 ## Accessibility Considerations for Rendering
 
