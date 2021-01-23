@@ -53,6 +53,6 @@ Note: the following needs updates:
 We are interested in hearing about additional community feedback related to accessibility
 and thoughts on the related open issues.
 
-## Authors:
+## Contributors:
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
