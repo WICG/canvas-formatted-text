@@ -108,7 +108,7 @@ get lots of feedback.
 * [CSS Houdini Box Tree API](https://drafts.css-houdini.org/box-tree-api-1/)
 * [Other platforms for drawing formatted text](https://docs.microsoft.com/en-us/dotnet/framework/wpf/advanced/drawing-formatted-text)
 
-# Explainers
+## Explainers
 
 We will be pursing consensus on each of the three aspects of the formatted text 
 problem space, starting with the data model and then detailing how it can be rendered
@@ -178,7 +178,7 @@ prompt users on canvas readback continues to work here.
 We are currently evaluating whether this API would increase fingerprinting surface
 area and will update this section with our findings. We welcome any community feedback.
 
-# Contributors:
+## Contributors:
 
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
