@@ -105,6 +105,6 @@ The [metrics explainer](explainer-metrics.md) describes how to take the data mod
 representation of formatted text and extract metrics for relating the laid-out text 
 back to the formatted text data model.
 
-## Authors:
+## Contributors:
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
