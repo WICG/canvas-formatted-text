@@ -246,6 +246,8 @@ Many common text level effects are also possible:
 * inline alignment and justification (text-align)
 * white-space? (whitespace collapsing, pre and preline)
 * text-shadow?
+* handling bounds (overflow)
+* clipping to a shape (clip-path)
 * background-color?
 * background-image (gradients)?
 
@@ -309,6 +311,13 @@ What's possible and what's not, for both the FormattedText and for its text runs
    is relatively easy (separating it into a separate `FormattedTextRun`, or implementing support for
    the related property `initial-letter`), but `::first-line` is harder to target given it depends on 
    where the line breaks.
+
+## Accessibility Considerations
+
+Because the `FormattedText` object is a retained data model for text, it has the potential to be a 
+fully accessible object (except it has no "view"--which might be an advantage in many scenarios).
+We are still thinking about what it would mean to make formatted text accessible and whether it makes
+sense. We welcome your comments and issues in this regard.
 
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
