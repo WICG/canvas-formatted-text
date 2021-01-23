@@ -77,7 +77,7 @@ let text = new FormattedText("hello", " world");
 // equivalent to:
 let text = new FormattedText();
 text.textruns.push( new FormattedTextRun( {text: "hello"} ) );
-text.textruns.push( new FormattedTextRun( {text: " world"} ) );
+text.textruns.push( new FormattedTextRun( " world" ) );
 // make a copy of all the text runs from another FormattedText object to be included in a new one:
 let text2 = new FormattedText( text.textruns );
 // copy everything from another FormattedText object and its text runs
@@ -192,13 +192,62 @@ When rendered in an inline-direction constrained space, this would render as:
 
 <img src="explainerresources/vertical-text-en.png" alt="The text 'It's better to make slow progress than no progress at all' rendered vertically from left-to-right in five columns">
 
-### Occlusions/ Non-rectangular wrapping
+### Advanced line wrapping
 
-Show example
+The `FormattedText` object model will support various CSS properites that influence
+how the text's lines will be positioned (assuming line wrapping occurs because a
+constrained layout space is ultimately provided). Normally, line wrapping will
+proceed within a rectangular bounds, but properties like `float` and `shape-outside`
+can constrain the space further.
+
+#### floats
+
+(Q) !! Basic use case requires block formatting context to create a float !! Wondering if 
+floated items will/should be rendered or just used for their geometry/dimensions? What if you float
+
+The use of the `float` property can reserve space as needed to avoid occluding 
+other content when the `FormattedText` object is ultimately rendered:
+
+```js
+// An image to reserve space for
+let sizeOfSquareImage = 200;
+let paddingAroundImage = 10;
+
+let largeParagraph = new FormattedText();
+let reservedSpace = new FormattedTextRun(); // Note: no text
+let para = new FormattedTextRun( "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor... shortened for brevity" );
+// make reservedSpace into a float
+reservedSpace.styleMap.set( "float", "left" );
+reservedSpace.styleMap.set( "padding", `${ sizeOfSquareImage }px` );
+reservedSpace.styleMap.set( "margin", `${ paddingAroundImage }px` );
+largeParagraph.textruns.push( reservedSpace );
+largeParagraph.textruns.push( para );
+```
+
+A rendering of the resulting `FormattedText` object with the image placed at the same 
+coordinate origin and an as the formatted text would render as:
+
+<img src="explainerresources/Available-Width.png" alt="Text rendering wraps to the right around a square image">
+
+#### shapes
+
+Combining `float` with `shape-outside` (CSS Shapes L1) enables non-rectangular line wrapping
+through float margin box space.
+
+More advanced scenarios become possible as CSS continues to evolve, for example
+wide support for `shape-inside` (CSS Shapes L2) and CSS Exclusions would further 
+enable fine-grained control of where lines are placed during layout of `FormattedText`.
 
 ### Special Formatting
 
-Show example
+Many common text level effects are also possible:
+* underline/overline
+* sub and superscript (vertical-align)
+* inline alignment and justification (text-align)
+* white-space? (whitespace collapsing, pre and preline)
+* text-shadow?
+* background-color?
+* background-image (gradients)?
 
 ## WebIDL (for nerds and implementers)
 
@@ -252,6 +301,14 @@ What's possible and what's not, for both the FormattedText and for its text runs
 | CSS Property | FormattedText | FormattedTextRun |
 |--------------|---------------|------------------|
 | text-decoration |            | ✔ |
+
+### Limitations
+
+* **CSS pseudo-elements** (`::first-letter`, `::first-line`, `::before`, `::after`). Pseudo-elements
+   would require some unique way to specify the style map for these. A workaround for `::first-letter` 
+   is relatively easy (separating it into a separate `FormattedTextRun`, or implementing support for
+   the related property `initial-letter`), but `::first-line` is harder to target given it depends on 
+   where the line breaks.
 
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
