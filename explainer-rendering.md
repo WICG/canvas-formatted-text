@@ -3,7 +3,7 @@ Formatted Text - Rendering
 An approach to rendering multi-line formatted text to an HTML canvas context.
 
 This explainer focuses on rendering [the data model](explainer-datamodel.md) for formatted text.
-For a general overview of the problem space, see the repo's [README.md]. In addition to rendering
+For a general overview of the problem space, see the repo's [readme](readme.md). In addition to rendering
 the data model can [provide metrics](explainer-metrics.md).
 
 ---
