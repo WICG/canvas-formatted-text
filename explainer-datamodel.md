@@ -86,7 +86,7 @@ let text3 = new FormattedText( text2 );
 
 ## Common Styles
 
-`FormattedTextRun` objects have two styling shortcuts that can be set at contruction time:
+`FormattedTextRun` objects have two styling shortcuts that can be set at construction time:
 * **font** - Any string accepted by the CSS text of the *font* property
 * **color** - Any string accepted by the CSS text of the *color* property
 
@@ -136,7 +136,7 @@ let formattedText = new FormattedText( "The quick ", "brown", " fox jumps over t
 formattedText.textruns[1].setStyle( "color: brown; font-weight: bold" );
 ```
 
-The above is the semantic equivlant to the following declarative HTML markup:
+The above is the semantic equivalent to the following declarative HTML markup:
 
 ```html
 <div>
@@ -174,7 +174,7 @@ proverb.textruns[1].styleMap.set( "font-weight", "bold" );
 
 Together with a nice font and constrained vertical layout bounds, this would render as:
 
-<img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient chineese proverb, vertically oriented in two columns, the second column bold">
+<img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chineese proverb, vertically oriented in two columns, the second column bold">
 
 In combination with other related CSS properties, many other vertical text layouts are
 possible:
@@ -226,7 +226,7 @@ though a more principled rationale for these should be clarified.
 
 ### Advanced text shaping
 
-Even with the restridtions noted in the prior section, CSS provides some powerful features
+Even with the restrictions noted in the prior section, CSS provides some powerful features
 that could be leveraged to achieve more advanced text behaviors.
 
 While not widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
