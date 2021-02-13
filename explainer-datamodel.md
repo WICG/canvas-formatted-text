@@ -192,66 +192,61 @@ When rendered in an inline-direction constrained space, this would render as:
 
 <img src="explainerresources/vertical-text-en.png" alt="The text 'It's better to make slow progress than no progress at all' rendered vertically from left-to-right in five columns">
 
-### Advanced line wrapping
+### How much CSS should be supported?
 
-The `FormattedText` object model will support various CSS properites that influence
+The `FormattedText` object model will support various CSS properties that influence
 how the text's lines will be positioned (assuming line wrapping occurs because a
-constrained layout space is ultimately provided). Normally, line wrapping will
-proceed within a rectangular bounds, but properties like `float` and `shape-outside`
-can constrain the space further.
+constrained layout width and height are ultimately provided), but there are many
+CSS properties that do not apply to text, and others that can change the fundamental
+layout of a text container (e.g., `float`, `position`, `display`, etc.). Where is a
+logical place to draw the line given the goal that `FormattedText` is meant for
+text (and not a general `Element` or `Node` replacement)?
 
-#### floats
+We believe it makes sense to constrain the use of CSS to properties that apply specifically 
+to inline-level content, and to restrict the ability to use CSS to change the layout 
+characteristics of the `FormattedTextRun` object from their assumed
+inline-level nature.
 
-(Q) !! Basic use case requires block formatting context to create a float !! Wondering if 
-floated items will/should be rendered or just used for their geometry/dimensions? What if you float
+So, for example, `float` would be ignored because it has the effect of pulling the 
+impacted content out of the normal flow by altering the object's layout characteristics to
+be block-level. Similarly, `position: absolute` pulls the impacted object out of the
+normal flow and raises lots of questions around where or how to layout its content in
+the relatively simple `FormattedTextRun` object model.
 
-The use of the `float` property can reserve space as needed to avoid occluding 
-other content when the `FormattedText` object is ultimately rendered:
+In some cases, we imagine it could be very usable to allow some otherwise restricted 
+properties to be used exclusively on the `FormattedText` object in its role as a container
+of inline-level content, for example `display: ruby` to enable use of Ruby annotated 
+layout.
 
-```js
-// An image to reserve space for
-let sizeOfSquareImage = 200;
-let paddingAroundImage = 10;
+CSS properties that do not generally impact the text (or its decoration) would also not
+be candidates for support in this object model. For example: `text-shadow` makes sense
+to support, while `box-shadow` does not. Similarly, various properties that style the 
+text's background may not be supported (e.g., `background-color`, `border`, `outline`)
+though a more principled rationale for these should be clarified.
 
-let largeParagraph = new FormattedText();
-let reservedSpace = new FormattedTextRun(); // Note: no text
-let para = new FormattedTextRun( "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor... shortened for brevity" );
-// make reservedSpace into a float
-reservedSpace.styleMap.set( "float", "left" );
-reservedSpace.styleMap.set( "padding", `${ sizeOfSquareImage }px` );
-reservedSpace.styleMap.set( "margin", `${ paddingAroundImage }px` );
-largeParagraph.textruns.push( reservedSpace );
-largeParagraph.textruns.push( para );
-```
+### Advanced text shaping
 
-A rendering of the resulting `FormattedText` object with the image placed at the same 
-coordinate origin and an as the formatted text would render as:
+Even with the restridtions noted in the prior section, CSS provides some powerful features
+that could be leveraged to achieve more advanced text behaviors.
 
-<img src="explainerresources/Available-Width.png" alt="Text rendering wraps to the right around a square image">
-
-#### shapes
-
-Combining `float` with `shape-outside` (CSS Shapes L1) enables non-rectangular line wrapping
-through float margin box space.
-
-More advanced scenarios become possible as CSS continues to evolve, for example
-wide support for `shape-inside` (CSS Shapes L2) and CSS Exclusions would further 
-enable fine-grained control of where lines are placed during layout of `FormattedText`.
+While not widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
+and CSS Exclusions provide exciting growth opportunities for text using this model. We 
+note that `shape-inside` applies to block-level content, and thus might need to be an 
+exception as already noted.
 
 ### Special Formatting
 
 Many common text level effects are also possible:
 * underline/overline
-* sub and superscript (vertical-align)
-* inline alignment and justification (text-align)
-* white-space? (whitespace collapsing, pre and preline)
-* text-shadow?
-* handling bounds (overflow)
-* clipping to a shape (clip-path)
-* background-color?
-* background-image (gradients)?
+* sub and superscript (`vertical-align`)
+* inline alignment and justification (`text-align`)
+* `white-space` control (whitespace collapsing, pre and preline)
+* `text-shadow`
 
-## WebIDL (for nerds and implementers)
+Some properties make sense only when there is a layout applied:
+* handling text `overflow` or clipping (`clip-path`)
+
+## WebIDL
 
 ```webidl
 [Exposed=Window,Worker] 
@@ -318,6 +313,10 @@ Because the `FormattedText` object is a retained data model for text, it has the
 fully accessible object (except it has no "view"--which might be an advantage in many scenarios).
 We are still thinking about what it would mean to make formatted text accessible and whether it makes
 sense. We welcome your comments and issues in this regard.
+
+## Alternatives and Prior Art
+
+
 
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
