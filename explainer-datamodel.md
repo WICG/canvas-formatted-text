@@ -223,17 +223,22 @@ block-direction values are not.
 
 The `FormattedText` object is an independent containing block for text. It is essentially a 
 `display: flow-root` object that establishes an inline formatting context for its children.
-It will be positioned relative to coordinates supplied at the time the object is rendered to
-the canvas (e.g., so that values of `top`, `right`, `bottom`, and `left` are computed 
-similarly as if this object was `position: relative` to its specified location on the canvas. 
+The `FormattedText` object has no positional relationship with anything other than its
+children, and so values like `top`, `right`, `bottom`, and `left` do not apply (i.e., the 
+object acts as its own initial containing block). Positioning the object for the purpose of
+rendering in some context must be done separately. In order to render or extract useful metrics
+from the `FormattedText` object, final dimensions for its size must be supplied (see 
+[Rendering explainer](explainer-rendering.md)) which are used to resolve relative values in
+supported properties like `width` and `height`.
+
 In some cases, we imagine it will be useful to allow the `FormattedText` object to assume
-alternate layout container types where those types provide unique text layout capabilities.
-For example, we expect to support `FormattedText` objects with an inner display type of 
-`ruby` in order to become a Ruby container and enable the use of Ruby annotated layout.
-Other container types are not currently planned to initially support but are good
-long-term candidates (e.g., multi-column containers created via the `columns` shorthand 
-property), while still others are less-likely to be supported (e.g., flex and grid container
-types, which are less useful for formatted text scenarios).
+alternate layout container types where those alternate types provide unique text layout
+capabilities. For example, we expect to support `FormattedText` objects with an inner 
+display type of `ruby` in order to become a Ruby container and enable the use of Ruby
+annotated layout. Other container types are not currently planned to initially support 
+but are good long-term candidates (e.g., multi-column containers created via the `columns`
+shorthand property), while still others are less-likely to be supported (e.g., flex and 
+grid container types, which are less useful for formatted text scenarios).
 
 There are various CSS properties that provide helpful graphical emphasis to text that are 
 also supported. These are for convenience in supporting common text formatting scenarios
