@@ -194,57 +194,72 @@ When rendered in an inline-direction constrained space, this would render as:
 
 ### How much CSS should be supported?
 
-The `FormattedText` object model will support various CSS properties that influence
-how the text's lines will be positioned (assuming line wrapping occurs because a
-constrained layout width and height are ultimately provided), but there are many
-CSS properties that do not apply to text, and others that can change the fundamental
-layout of a text container (e.g., `float`, `position`, `display`, etc.). Where is a
-logical place to draw the line given the goal that `FormattedText` is meant for
-text (and not a general `Element` or `Node` replacement)?
+`FormattedText` and `FormattedTextRun` objects support various CSS properties that 
+influence how the text's lines will ultimately be positioned. There are also many
+CSS properties that do not apply to text, that convert between typical text layout
+and other layouts, or that take normal flow content out of flow (e.g., `float`, `position`, 
+`display`, etc.). For the purposes of a formatted text object model, not all CSS properties
+can or should be supported. The guidelines for what CSS to support and what not to support 
+follow.
 
-We believe it makes sense to constrain the use of CSS to properties that apply specifically 
-to inline-level content, and to restrict the ability to use CSS to change the layout 
-characteristics of the `FormattedTextRun` object from their assumed
-inline-level nature.
+#### Focus on text-related CSS properties
 
-So, for example, `float` would be ignored because it has the effect of pulling the 
-impacted content out of the normal flow by altering the object's layout characteristics to
-be block-level. Similarly, `position: absolute` pulls the impacted object out of the
-normal flow and raises lots of questions around where or how to layout its content in
-the relatively simple `FormattedTextRun` object model.
+We believe it makes sense to only support CSS properties that provide specific features
+for inline-level content (text) and the management of the text's container. Other properties,
+especially those that would change the layout characteristics of `FormattedTextRun`
+objects from their assumed inline-level nature, will not be supported. In this data model
+we want to keep the semantics of a `FormattedTextRun` consistent with the CSS that can be
+applied.
 
-In some cases, we imagine it could be very usable to allow some otherwise restricted 
-properties to be used exclusively on the `FormattedText` object in its role as a container
-of inline-level content, for example `display: ruby` to enable use of Ruby annotated 
-layout.
+Applying the above principle to `FormattedTextRun` objects means that `float` would not
+be supported because it has the effect of changing the object's computed display value 
+from inline to block (taking it out-of-flow). `position: absolute` also takes
+the object out of the normal flow. Likewise, the `width` and `height` properties would
+be ignored because they do not apply to inline-level elements. Attempting to set these 
+properties would have no effect. On the other hand, `padding` would be supported and 
+applied to `FormattedTextRun` objects in accordance with the rules of CSS inline layout,
+e.g., the inline-direction `padding` values are taken into account while the 
+block-direction values are not.
 
-CSS properties that do not generally impact the text (or its decoration) would also not
-be candidates for support in this object model. For example: `text-shadow` makes sense
-to support, while `box-shadow` does not. Similarly, various properties that style the 
-text's background may not be supported (e.g., `background-color`, `border`, `outline`)
-though a more principled rationale for these should be clarified.
+The `FormattedText` object is an independent containing block for text. It is essentially a 
+`display: flow-root` object that establishes an inline formatting context for its children.
+It will be positioned relative to coordinates supplied at the time the object is rendered to
+the canvas (e.g., so that values of `top`, `right`, `bottom`, and `left` are computed 
+similarly as if this object was `position: relative` to its specified location on the canvas. 
+In some cases, we imagine it will be useful to allow the `FormattedText` object to assume
+alternate layout container types where those types provide unique text layout capabilities.
+For example, we expect to support `FormattedText` objects with an inner display type of 
+`ruby` in order to become a Ruby container and enable the use of Ruby annotated layout.
+Other container types are not currently planned to initially support but are good
+long-term candidates (e.g., multi-column containers created via the `columns` shorthand 
+property), while still others are less-likely to be supported (e.g., flex and grid container
+types, which are less useful for formatted text scenarios).
 
-### Advanced text shaping
+There are various CSS properties that provide helpful graphical emphasis to text that are 
+also supported. These are for convenience in supporting common text formatting scenarios
+that would otherwise require detailed introspection of the object model's related metrics
+in order to correctly layout and render as desired with respect to the text. Because these
+features are already available in CSS layout engines and significantly ease author burden, 
+many of these CSS properties will be supported. Some supported examples include: 
+`text-decoration`, `text-shadow`, `box-shadow`, even `border`, `outline`, and limited `background` support 
+(where the metrics and composition processing do not require external dependencies, such as 
+image resources typically loaded by `url()` functions).
 
-Even with the restrictions noted in the prior section, CSS provides some powerful features
-that could be leveraged to achieve more advanced text behaviors.
+#### Text clipping and future extensions 
 
-While not widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
-and CSS Exclusions provide exciting growth opportunities for text using this model. We 
-note that `shape-inside` applies to block-level content, and thus might need to be an 
-exception as already noted.
+By leveraging CSS, we get the added benefit of a well-known constraint language for 
+expressing box bounds and the expected behavior for content (in our case formatted text 
+content) that overflows those bounds. `width` and `height` and corresponding `min-width`
+or `max-height` properties express the desired constraints for eventual line-box 
+computation when it comes to rendering the object model or returning metrics. Similarly,
+`overflow` and `clip-path` can further ensure the text content expands or is clipped to
+fit the desired constraints. These properties would only apply on the `FormattedText` 
+container object.
 
-### Special Formatting
-
-Many common text level effects are also possible:
-* underline/overline
-* sub and superscript (`vertical-align`)
-* inline alignment and justification (`text-align`)
-* `white-space` control (whitespace collapsing, pre and preline)
-* `text-shadow`
-
-Some properties make sense only when there is a layout applied:
-* handling text `overflow` or clipping (`clip-path`)
+CSS continues to evolve, and it makes sense to extend relevant new CSS properties to
+this object model as they become a part of the web platform. For example, while not
+widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
+and CSS Exclusions provide exciting growth opportunities for text using this model.
 
 ## WebIDL
 
@@ -316,7 +331,16 @@ sense. We welcome your comments and issues in this regard.
 
 ## Alternatives and Prior Art
 
+The formatted text object model is designed to be very high-level, combining a simple linear text-run
+model with the familiarity of CSS. We recognize that one of the significant gaps in the platform is the
+lack of ability to understand how text was ultimately formatted. This information is critical in many
+scenarios where web developers want to take more control over text layout. While not detailed in this
+document, we do plan to work on a detailed metrics API that we aspire to apply to both this object model
+as well as in CSS Houdini's Layout API and even to regular DOM elements hosting inline formatting contexts.
 
+As we move into investigating metrics, we intend to work closely with the proponents of the 
+[Text Shaping API](https://docs.google.com/document/d/1hBHETpotl4cnvN1dDts_gb3hGTF70_DxjCcERoDrX-A/edit?ts=602d763a#heading=h.xwhbmm78cnfj)
+to be sure we are addressing relevant use cases.
 
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
