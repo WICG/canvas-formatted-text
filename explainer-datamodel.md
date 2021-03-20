@@ -313,11 +313,65 @@ interface mixin FormattedTextStylable {
 
 ## Supported CSS on FormattedText and text runs
 
-What's possible and what's not, for both the FormattedText and for its text runs.
+We've compiled a list of text-related (or generally applicable) CSS properties that we believe make
+sense to support on `FormattedText` and `FormattedTextRun` objects. This list is not exhaustive.
+For example, it does not include many of the new logical properites such as `inline-size` for 
+`width`. This list is provided for potential testing purposes and to facilitate discussion.
 
-| CSS Property | FormattedText | FormattedTextRun |
-|--------------|---------------|------------------|
-| text-decoration |            | ✔ |
+| CSS Property | FormattedText | FormattedTextRun | inherits | Notes |
+|--------------|---------------|------------------|----------|-------|
+| background | ✔ | ✔ | no | background-attachment, background-origin, background-position, background-repeat, background-size operate on an external resource image and will be ignored. Background-image will only support `<gradient>` functions |
+| border | ✔ | ✔ | no |  |
+| border-image | ✔ | ✔ | no | border-image-source will only supports `<gradient>` functions |
+| border-radius | ✔ | ✔ | no |  |
+| box-decoration-break | ✔ | ✔ | no |  |
+| box-shadow | ✔ | ✔ | no |  |
+| box-sizing | ✔ |  | no |  |
+| clip-path | ✔ | ✔ | no |  |
+| color | ✔ | ✔ | yes |  |
+| direction | ✔ | ✔ | yes |  |
+| display | ✔ | ✔ | no | Generally not supported, but may make exceptions, e.g., ruby |
+| font | ✔ | ✔ | yes |  |
+| font-feature-settings | ✔ | ✔ | yes |  |
+| font-kerning | ✔ | ✔ | yes |  |
+| font-size-adjust | ✔ | ✔ | yes |  |
+| height | ✔ |  | no |  |
+| hyphens | ✔ | ✔ | yes |  |
+| letter-spacing | ✔ | ✔ | yes |  |
+| line-break | ✔ | ✔ | yes |  |
+| margin | ✔ | ✔ | no |  |
+| mask | ✔ | ✔ | no | mask-border-source will only supports `<gradient>` functions |
+| mask-border | ✔ | ✔ | no |  |
+| max-height | ✔ |  | no |  |
+| max-width | ✔ |  | no |  |
+| min-height | ✔ |  | no |  |
+| min-width | ✔ |  | no |  |
+| opacity | ✔ | ✔ | no |  |
+| outline | ✔ | ✔ | no |  |
+| overflow-wrap | ✔ | ✔ | yes |  |
+| padding | ✔ | ✔ | no |  |
+| tab-size | ✔ | ✔ | yes |  |
+| text-align | ✔ |  | yes |  |
+| text-align-all | ✔ |  | yes |  |
+| text-align-last | ✔ |  | yes |  |
+| text-combine-upright | ✔ | ✔ | yes |  |
+| text-decoration | ✔ | ✔ | no | |
+| text-emphasis | ✔ | ✔ | yes | |
+| text-indent | ✔ |  | yes |  |
+| text-justify | ✔ | ✔ | yes |  |
+| text-orientation | ✔ | ✔ | yes |  |
+| text-overflow | ✔ |  | no |  |
+| text-transform | ✔ | ✔ | yes |  |
+| transform | ✔ |  | no |  |
+| transform-box | ✔ |  | no |  |
+| transform-origin | ✔ |  | no |  |
+| unicode-bidi | ✔ | ✔ | no |  |
+| white-space | ✔ | ✔ | yes |  |
+| width | ✔ |  | no |  |
+| word-break | ✔ | ✔ | yes |  |
+| word-spacing | ✔ | ✔ | yes |  |
+| word-wrap | ✔ | ✔ | yes |  |
+| writing-mode | ✔ | ✔ | yes |  |
 
 ### Limitations
 
