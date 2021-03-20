@@ -339,6 +339,7 @@ For example, it does not include many of the new logical properites such as `inl
 | hyphens | ✔ | ✔ | yes |  |
 | letter-spacing | ✔ | ✔ | yes |  |
 | line-break | ✔ | ✔ | yes |  |
+| line-height | ✔ | ✔ | yes |  |
 | margin | ✔ | ✔ | no |  |
 | mask | ✔ | ✔ | no | mask-border-source will only supports `<gradient>` functions |
 | mask-border | ✔ | ✔ | no |  |
