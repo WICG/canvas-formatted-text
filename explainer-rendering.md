@@ -57,7 +57,7 @@ CSS styles on the canvas element affect text rendering. These CSS properties are
 - `word-break` / `word-wrap` - Controls break opportunities for text wrapping.
 
 
-## WebIDL (for nerds and implementers)
+## WebIDL
 
 ```webidl
 partial interface CanvasText { 
