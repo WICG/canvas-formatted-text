@@ -381,6 +381,8 @@ For example, it does not include many of the new logical properites such as `inl
    is relatively easy (separating it into a separate `FormattedTextRun`, or implementing support for
    the related property `initial-letter`), but `::first-line` is harder to target given it depends on 
    where the line breaks.
+*  explicit values of `inherit` on CSS properties that aren't specified to inherit by default will not
+   likely be supported.
 
 ## Accessibility Considerations
 
