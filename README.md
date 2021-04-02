@@ -1,8 +1,10 @@
-Formatted Text
+Welcome!
 =============
-An imperative approach to multi-line formatted text; its 
-[data model](explainer-datamodel.md), [rendering](explainer-rendering.md), and
-[metrics](explainer-metrics.md).
+This is the home for the **Formatted Text** incubation effort. The explainer for
+this feature has recently been split into three documents for ease of reading and 
+reviewing: [data model](explainer-datamodel.md), [rendering](explainer-rendering.md),
+and [text metrics](explainer-metrics.md). Below is a general introduction to the problem
+space and the motivation for this effort.
 
 ## Introduction & Challenges
 
@@ -37,8 +39,8 @@ VR headsets).
 ### Lack of unified metrics for multi-line text in HTML
 
 In other scenarios, separately from Canvas, applications are interested in getting more
-detailed metrics for multi-line text (e.g., from previously rendered text in the DOM).
-Precise metrics from the source text can help inform placement of overlays, annotations,
+detailed text metrics for multi-line text (e.g., from previously rendered text in the DOM).
+Precise text metrics from the source text can help inform placement of overlays, annotations,
 translations, etc. Unfortunately, text metrics that help map source text placement in a
 given layout are not currently provided by the web platform. As a result a variety of 
 workarounds are employed to try to approximate this data today often at the cost of 
@@ -81,7 +83,7 @@ for regular HTML and SVG layout. Unfortunately, this component has been tightly 
 into the browser's rendering pipeline, and not exposed in an imperative way. 
 Furthermore HTML's DOM provides only a very limited set of metrics for text elements
 and almost no insight into the post-layout details of how the source text was
-formatted. SVG's DOM is slightly more helpful by providing some additional metrics.
+formatted. SVG's DOM is slightly more helpful by providing some additional text metrics.
 
 Our goal is to create an abstraction that allows authors to collect multi-line
 formatted text into a data model that is independent of the HTML/SVG data model
@@ -89,7 +91,7 @@ but can still leverage the power of the browser's native line breaking and text
 shaping component. We think it is valuable to re-use formatting principles from CSS
 as much as possible. Given the data model, we also want to provide a way to
 initiate layout and rendering of that data model to a canvas, and likewise provide
-a way to initiate layout and then read-back the metrics that describe how the text
+a way to initiate layout and then read-back the text metrics that describe how the text
 was formatted and laid out given prescribed layout constraints (without requiring
 the text to be rendered at all).
 
@@ -112,7 +114,7 @@ get lots of feedback.
 
 We will be pursing consensus on each of the three aspects of the formatted text 
 problem space, starting with the data model and then detailing how it can be rendered
-and how it's metrics can be extracted:
+and how its text metrics can be extracted:
 * [Formatted Text Data Model](explainer-datamodel.md)
 * [Formatted Text Rendering](explainer-rendering.md)
 * [Formatted Text Metrics](explainer-metrics.md)
@@ -127,7 +129,7 @@ Please review and comment on our [existing open issues](https://github.com/WICG/
 In a previous iteration of this proposal, we called for a "simple" and "advanced"
 model for rendering formatted text to the canvas. The advanced model allowed authors
 to place arbitrary lines by alternately measuring a part of the data model and then
-rendering the resulting "line" metrics object.
+rendering the resulting "line metrics" object.
 
 Under that design, we were assuming that authors would want to cache and re-use the
 line objects that were produced. If authors would not re-use these objects, then no
