@@ -119,6 +119,10 @@ and how its text metrics can be extracted:
 * [Formatted Text Rendering](explainer-rendering.md)
 * [Formatted Text Metrics](explainer-metrics.md)
 
+## Implementations
+
+* Chromium has an initial implementation behind the _Experimental Web Platform Features_ flag. See [variations from the explainer in the chromium experimental implementation notes](impl-chromium-notes.md) for additional important details.
+
 ## Open issues and questions
 
 Please review and comment on our [existing open issues](https://github.com/WICG/canvas-formatted-text/issues).
