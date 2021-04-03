@@ -84,27 +84,11 @@ let text2 = new FormattedText( text.textruns );
 let text3 = new FormattedText( text2 );
 ```
 
-## Common Styles
-
-`FormattedTextRun` objects have two styling shortcuts that can be set at construction time:
-* **font** - Any string accepted by the CSS text of the *font* property
-* **color** - Any string accepted by the CSS text of the *color* property
-
-```js
-let textrun2 = new FormattedTextRun( { text: "hello, I'm green with envy", font: "20pt Courier", color: "#00FF00" } );
-```
-These values can also be read and changed after the object is created:
-
-```js
-textrun2.font = "10pt Courier";
-textrun2.color = "#00CC00";
-```
-
 ## CSS Styling of FormattedText and text runs
 A wide range of inline layout-related CSS is supported on both the `FormattedText` and
 `FormattedTextRun` objects.
 
-To set these use the `styleMap` property (just like in HTML):
+To set styles use the `styleMap` property (just like in HTML):
 
 ```js
 textrun2.styleMap.set("text-decoration", "underline");
@@ -112,13 +96,21 @@ textrun2.styleMap.set("text-decoration", "underline");
 
 The `styleMap` property is available on both the `FormattedText` and `FormattedTextRun` objects.
 
-It is also possible to set multiple styles at once similar to how HTML parses the `style` attribute:
+It is also possible to set multiple styles at once similar to how HTML parses the `style` attribute.
+Set styles all at once at construction time:
+
+```js
+let textrun2 = new FormattedTextRun( { style: "color: yellow; font: 15pt Verdana" } );
+```
+
+Or set groups of styles together dynamically afterward:
 
 ```js
 textrun2.setStyle( "color: yellow; font: 15pt Verdana" );
 ```
 
 ### Cascading of values from FormattedText to text runs
+
 CSS properties applied to the style map from the FormattedText that are specified to inherit
 from parent to child will do so from the FormattedText to it's text run child objects.
 
@@ -250,7 +242,7 @@ many of these CSS properties will be supported. Some supported examples include:
 (where the metrics and composition processing do not require external dependencies, such as 
 image resources typically loaded by `url()` functions).
 
-#### Text clipping and future extensions 
+#### Future extensions 
 
 By leveraging CSS, we get the added benefit of a well-known constraint language for 
 expressing box bounds and the expected behavior for content (in our case formatted text 
@@ -281,9 +273,8 @@ interface FormattedText {
 FormattedText includes FormattedTextStylable; 
 
 dictionary FormattedTextRunInit { 
-  DOMString text = ""; 
-  DOMString font = "";
-  DOMString color = "";
+  DOMString text = "";
+  DOMString style = "";
 }; 
 
 [Exposed=Window,Worker] 
@@ -292,12 +283,10 @@ interface FormattedTextRun {
   constructor(DOMString text);
   constructor(FormattedTextRunInit textRunInit);
 
-  attribute DOMString text; 
-  attribute DOMString font; 
-  attribute DOMString color; 
+  attribute DOMString text;
 
   // owning FormattedText (if any) 
-  readonly attribute FormattedText? owner;         // null if not contained in a FormattedText
+  readonly attribute FormattedText? parent;        // null if not contained in a FormattedText
  
   // navigation in the array 
   readonly attribute FormattedTextRun? next;       // null if last or not contained in FormattedText
