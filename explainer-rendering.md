@@ -30,32 +30,29 @@ This would produce the following output on the canvas:
 ### Bidi Text
 
 No additional work is needed from web developers to support bidi text.
-Implementations will perform bidi analysis on the `CanvasFormattedText`'s text runs
+Implementations will perform bidi analysis on the `FormattedText`'s text runs
 and create internal bidi runs if necessary. An example demonstrating bidi text follows:
 
 ```js
 const context = document.getElementById( "myCanvas" ).getContext( "2d" );
 context.font = "30px Arial";
-let canvasFormattedText = new CanvasFormattedText();
-canvasFormattedText.appendRun( { text: "Sample arabic بمدينة مَايِنْتْس، ألمانيا text." } );
-context.fillFormattedText( canvasFormattedText, /*x*/0, /*y*/30, /*wrapWidth*/350 );
+let formattedText = new FormattedText();
+formattedText.textruns.push( new FormattedTextRun( { text: "Sample arabic بمدينة مَايِنْتْس، ألمانيا text." } ) );
+context.fillFormattedText( formattedText, /*x*/0, /*y*/30, /*wrapWidth*/350 );
 ```
 
 produces the following output on the canvas:
 
 <img src="explainerresources/Example2.png" alt="Wrapped text rendered in a canvas." align="center"/>
 
-### Pre-existing text controls
+### Interaction with existing canvas text state
 
-The other text styles `textAlign`, `textBaseline` on the canvas context control justification
-and baseline alignment of the multiline text relative to provided x/y coordinates.
+Canvas 2d contexts have several states that impact `fillText()` and `strokeText()`, such as `textAlign`
+and `textBaseline`. **These states do not apply to `fillFormattedText()`** because the `FormattedText`
+formatting depends on the specified CSS in [the data model](explainer-datamodel.md) (and not on the
+canvas state).
 
-CSS styles on the canvas element affect text rendering. These CSS properties are
-
-- `line-height` - Specifies height of a line.
-- `direction` - Sets the initial direction for bidi analysis.
-- `word-break` / `word-wrap` - Controls break opportunities for text wrapping.
-
+Only the default font is used when rendering to the canvas.
 
 ## WebIDL
 
@@ -66,20 +63,15 @@ partial interface CanvasText {
                          double x, 
                          double y, 
                          double inlineSize, 
-                         optional FormattedTextOptions options); 
+                         optional double blockSize); 
 
   void strokeFormattedText(FormattedText formattedText, 
                            double x, 
                            double y, 
                            double inlineSize, 
-                           optional FormattedTextOptions options); 
-}; 
- 
-// Dictionary for future extensibility for layout/canvas integration features
-dictionary FormattedTextOptions { 
-  double blockSize;
-}; 
-```
+                           optional double blockSize); 
+};
+ ```
 
 ## Accessibility Considerations for Rendering
 
