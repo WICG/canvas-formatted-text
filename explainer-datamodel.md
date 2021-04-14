@@ -393,6 +393,8 @@ As we move into investigating metrics, we intend to work closely with the propon
 [Text Shaping API](https://docs.google.com/document/d/1hBHETpotl4cnvN1dDts_gb3hGTF70_DxjCcERoDrX-A/edit?ts=602d763a#heading=h.xwhbmm78cnfj)
 to be sure we are addressing relevant use cases.
 
+The SKIA TextBlob and [TextBlobBuilder](https://api.skia.org/classSkTextBlobBuilder.html) provide a related API for shaping text within a bounds.
+
 ## Rendering the FormattedText
 The [next explainer](explainer-rendering.md) describes how to take the data model representation of
 text and make is show up on screen.
