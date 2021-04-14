@@ -351,7 +351,10 @@ For example, it does not include many of the new logical properites such as `inl
 | text-justify | ✔ | ✔ | yes |  |
 | text-orientation | ✔ | ✔ | yes |  |
 | text-overflow | ✔ |  | no |  |
+| text-shadow | ✔ | ✔ | yes |  |
 | text-transform | ✔ | ✔ | yes |  |
+| text-underline-offset | ✔ | ✔ | yes |  |
+| text-underline-position | ✔ | ✔ | yes |  |
 | transform | ✔ |  | no |  |
 | transform-box | ✔ |  | no |  |
 | transform-origin | ✔ |  | no |  |
