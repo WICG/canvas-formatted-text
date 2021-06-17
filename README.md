@@ -109,6 +109,10 @@ get lots of feedback.
 * [CSS Houdini Font Metrics API](https://drafts.css-houdini.org/font-metrics-api/)
 * [CSS Houdini Box Tree API](https://drafts.css-houdini.org/box-tree-api-1/)
 * [Other platforms for drawing formatted text](https://docs.microsoft.com/en-us/dotnet/framework/wpf/advanced/drawing-formatted-text)
+* Google SKIA's Text API Proposals
+   * [Text API Overview](https://github.com/google/skia/blob/main/site/docs/dev/design/text_overview.md)
+   * [Canvas2D extensions for Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_c2d.md)
+   * [Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_shaper.md)
 
 ## Explainers
 
