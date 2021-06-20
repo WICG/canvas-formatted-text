@@ -6,7 +6,9 @@ metrics from the formatted text data model.
 This explainer focuses on the metrics that are offered for inline text content, in particular
 the data model for formatted text. We aspire to create these metrics in a way that allows them
 to be supported for other sources of inline text content, in particular the DOM or a Worklet's
-Layout API algorithm. For a general overview of the feature, see the repo's [readme](README.md).
+Layout API algorithm. 
+Additional scenario would be for different web application rendering systems which can make use of the text shaping information to perform their own rendering logic. For example WebGL based apps with text content. The metrics would be used to determine how to correctly position glyphs in a typographically correct manner.
+For a general overview of the feature, see the repo's [readme](README.md).
 You can also learn more about the [formatted text data model](explainer-datamodel.md) and 
 [how to render it](explainer-rendering.md).
 
