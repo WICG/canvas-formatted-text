@@ -104,6 +104,7 @@ get lots of feedback.
 * [CSS Inline Layout 3](https://drafts.csswg.org/css-inline-3/)
 * [CSS Houdini Layout API](https://drafts.css-houdini.org/css-layout-api-1/)
 * [HTML Canvas API and TextMetrics](https://html.spec.whatwg.org/multipage/canvas.html#drawing-text-to-the-bitmap)
+   * Open issues: [3994](https://github.com/whatwg/html/issues/3994), [4026](https://github.com/whatwg/html/issues/4026), [4030](https://github.com/whatwg/html/issues/4030), [4033](https://github.com/whatwg/html/issues/4033), [4034](https://github.com/whatwg/html/issues/4034), 
 * [SVG Text](https://svgwg.org/svg2-draft/text.html)
 * [Proposed Canvas Text Modifiers](https://github.com/fserb/canvas2D/blob/master/spec/text-modifiers.md)
 * [CSS Houdini Font Metrics API](https://drafts.css-houdini.org/font-metrics-api/)
