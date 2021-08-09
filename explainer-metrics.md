@@ -24,7 +24,7 @@ You can also learn more about the [formatted text data model](explainer-datamode
 
 ## Peparing text for rendering: from gross placement needs to fine-grained glyph control
 
-### Use case: `FormattedText` paragraph placement
+### Use case: paragraph placement
 
 This use case is the most basic use case we can imagine--identifying the placement of some
 Formatted Text into a view layer (like Canvas). Placement needs two things, a reference 
@@ -47,7 +47,7 @@ A rendering API must provide:
    line-spacing, etc., on the original `FormattedText` objects and re-request metrics until
    the desired goal is met.
 
-### Use Case: `FormattedText` line placement
+### Use Case: line placement
 
 In this case, the author would like the platform to calculate line wrapping, but intends to
 render each line iteratively (such as for captions), or with custom spacing, etc.
@@ -110,6 +110,13 @@ Metrics provide:
    their container (if a selection needs to be tightly bound around the formatted glyph runs
    inside of lines).
 * Access to glyph width/height (bounding box) and offset from the fragment container. 
+
+A rendering API does not need to provide specific features (other than those noted in previous 
+use cases) for this scenario. (e.g., rendering a selction and caret can be done with existing
+features).
+
+## Overview: data model to metrics to rendering
+
 
 
 ## Additional Accessibility Considerations for Metrics
