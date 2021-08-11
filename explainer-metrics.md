@@ -68,7 +68,7 @@ A rendering API must provide:
 ⚠🚧 We would like to validate this use case for Canvas 2D scenarios. For WebGL scenarios, we
 understand the key information needed for rendering is the given shaped font's glyph id and
 glyph advance information. Is a Canvas 2d rendering API needed? A sketch of how this might 
-work follows.🚧⚠
+work follows.
 
 Author provides same information as in the previous use case. 
 
