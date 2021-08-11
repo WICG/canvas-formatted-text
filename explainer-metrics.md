@@ -1,5 +1,5 @@
-Formatted Text - Metrics
-=============
+# Formatted Text - Metrics
+
 A representation of post-layout metrics for inline layout content, in particular the
 metrics from the formatted text data model.
 
@@ -65,18 +65,23 @@ A rendering API must provide:
 
 ### Use Case: specific glyph placement
 
+⚠🚧 We would like to validate this use case for Canvas 2D scenarios. For WebGL scenarios, we
+understand the key information needed for rendering is the given shaped font's glyph id and
+glyph advance information. Is a Canvas 2d rendering API needed? A sketch of how this might 
+work follows.🚧⚠
+
 Author provides same information as in the previous use case. 
 
 Metrics provide: 
 
 * List of Shaped Glyph metrics per fragment (fragment is a unit of glyphs that all share the
-   same format/font/bidi/etc.) such as position, advance, bearing, bounding box, kerning 
-   between glyphs. 
-* Position references of each glyph's extent in the input characters (of the FormattedText object). 
+   same format/font/bidi/etc.). 
+* Pointers back to the input characters for each glyph's bounds. 
 
 A rendering API must provide:
 
-* (x, y) location to place a glyph, given a Fragment, and glyph index (within that fragment)
+* (x, y) location to place a glyph, given a Fragment (holder of glyph's shaped information),
+   and glyph info (index within that fragment or ID within the font)
 
 ## Editing scenarios for inline text
 
@@ -113,9 +118,122 @@ Metrics provide:
 
 A rendering API does not need to provide specific features (other than those noted in previous 
 use cases) for this scenario. (e.g., rendering a selction and caret can be done with existing
-features).
+APIs).
 
-## Overview: data model to metrics to rendering
+# Overview: data model to metrics to rendering
+
+The [data model](explainer-datamodel.md) itself cannot be rendered to a canvas as-is. We
+experimented with the idea of directly-rendering a `FormattedText` object, and found that in
+nearly every scenario the author needed to know both the expected width (i.e., inline-size) and
+the resultant height (i.e., block-size) in order to place the formatted content properly in the
+canvas.
+
+As is the case with HTML text in normal flow, vertical positioning options for paragraphs of text
+are limited. CSS Flex and Grid now offer the desired alignment properties, however, it is not our
+goal to introduce these new CSS layout models to `FormattedText`. Instead, we will let authors
+calculate the placement of the formatted text themselves. To do this, the metrics API will provide
+both the inline and **block size** values.
+
+In order to get the data model's inline and block size, the `FormattedText` object must be… well, 
+formatted.
+
+A new API is added to the `FormattedText` object: **format()**. This API takes a maximum inline size 
+parameter and asynchronously returns a **formatted paragraph object** containing the inline size and
+block size (among other things) after running all shaping, line breaking, and formatting of the text.
+This paragraph object **is a snapshot** of metrics for the `FormattedText` data model, given the
+constraints applied at the time of formatting, and is **not updated** as additional changes are made
+to the data model.
+
+The formatted paragraph is a container for all the input data model's metrics. It contains the APIs 
+to get additional line, fragment, and glyph information. The object hierarchy is shown below (note
+the image shows lines in a horizontal writing mode--but vertical writing modes are supported):
+
+![A FormattedTextParagraph box contains four horizontal FormattedTextLine objects. Each line object contains one or more FormattedTextFragment objects. Each fragment object is a container for glyph information.](explainerresources/metrics-structure.png)
+
+These objects (that contain a snapshot of metrics and layout information) may be rendered independently.
+We suggest APIs to render the entire paragraph, a single line, or (needs validating) any sequence of
+glyphs from a fragment (see [Rendering section](explainer-rendering.md)).
+
+| New APIs on `FormattedText` | Description |
+|---|---|
+| .`format`(`inlineSize`) | Asynchronously formats the `FormattedText` object, returning an object suitable for rendering and extracting metrics: a `FormattedTextParagraph` |
+
+## Metrics lifetime expectations
+
+⚠🚧 We encourage prototyping to get feedback about the implementation opportunities or complexities 
+of this suggested approach.
+
+It seems likely that developers will want to `format` their `FormattedText` frequently (for example, 
+as the model is changed to respond to user actions). Because metrics objects are snapshots, this 
+could lead to an accumulation of many copies of metrics, only the most recent of such is relevant to
+the latest data model udpates at any given time. One approach, to avoid unnecessary pressure on the 
+garbage collector, is to return the same instance of one or all of the metrics objects each time
+`format` is called. If a portion of the metrics have changed, then the objects related to those 
+metrics would be new instances, while the other unchanged metrics would be same-instance identical.
+
+A downside to this approach is that authors wouldn't necessarily be able to depend on getting back
+the same object identity all the time. For example, JavaScript properties added to a line object might
+"stick" on that object only as long as the same instance is returned from the API. Once a "new" object
+is returned, the author's extra JavaScript properties will be missing.
+
+Our recommendation is a hybrid approach. New objects shall be created every time `format` is called.
+This allows us to provide clear author expectations. However, to allow implementations to optimize, 
+only **one copy** of the metrics objects (the one most recently returned from `format`) will be 
+"operable" at any one time. Prior copies of metrics objects will be internally disabled such that API
+calls on them will throw exceptions.
+
+## Thinking ahead: future integration into DOM or Houdini Layout API
+
+⚠🚧 WARNING: This section is entirely speculative, and out of scope for now. We include it here 
+to ponder extended use cases in which these metrics could be applicable in the wider web platform.
+(And not to lose track of them in the design process.)
+
+The opportunity to get detailed metrics for formatted text is not exclusively tied to scenarios 
+where DOM is potentially unavailable or impractical to use. We would like to ensure that we design
+for the possibility of integration into both DOM and Layout API scenarios as well.
+
+We envision APIs similar to `format()`, that could also extract formatted text metrics. For DOM,
+a given `Node` already has a layout (when attached to the tree) that includes a Layout box model,
+and so a similar `format` call would not require specifying an inline-size constraint. Instead,
+something like `measureFormattedText()` would operate at \[some scope] and return the formatted
+text metrics for that scope. A more scoped set of metrics could be returned by extending a similar
+existing API [`getClientRects()`](https://drafts.csswg.org/cssom-view/#dom-element-getclientrects)
+with line metric information.
+
+In the Layout API, while processing a `layout`, `LayoutFragment` objects can represent a line of text.
+In these situations, it might make sense to extend the `LayoutFragment` by combining it with a 
+`FormattedTextLine` metrics object. This would provide extra information about the intra-line fragments
+and glyph information, potentially allowing advanced positioning of glyphs within a line-layout pass.
+
+| ⚠🚧 Ideas for integration into other parts of the platform | Description |
+|---|---|
+| myElement.`measureFormattedText`() | Similar to `format`. TBD on scope of how this would work 😊 |
+| `extDOMRect`.`textFragments`[`i`] | Alternative DOM integration point that extends `getClientRects()` such that each rectangle gets the `FormattedTextLine` mixin or some such. | 
+| `extLayoutFrag`.`textFragments`[`i`] | Array of `FormattedTextFragments` (see equivalent functionality in a `FormattedTextLine` object). |
+
+# Formatted text metrics objects
+
+## Paragraphs - `FormattedTextParagraph`
+
+This is the top-level container returned by formatting a FormattedText object. It provides:
+
+* width/height.
+* array of Line objects.
+* a coordinate system for its lines (see section below).
+* Utility function for getting a position from a character and text run in the data model (position
+   objects described below).
+* Utility function for getting a position from an x/y coordinate pair (where the x/y coordinates 
+   should be relative to the paragraph's coordinate system.
+
+| API | Description |
+|---|---|
+| .`inlineSize` | Returns the bounding-box size in the inline direction or width for horizontal writing modes (double) |
+| .`blockSize` | Returns the bounding-box size in the block direction or height for horizontal writing modes (double) |
+| .`lines`[] | An array of `FormattedTextLine` objects |
+| .`getPosition`(`textrun`, `offset`) | Given the "source object" (intentionally generic: could be extended to support `Text` in the future), and an offset, returns a `FormattedTextPosition` of the associated glyph (if any). If no glyph for that character, returns `null`. |
+| .`getPositionFromPoint`(`x`,`y`,`findNearest`) | For mapping pointer positions into glyphs. `findNearest` might ensure that a `FormattedTextPosition` is always returned regardless of the coordinate value, whereas otherwise, `null` might be returned if not strictly over a glyph. |
+
+### Thoughts on coordinate systems
 
 
 
