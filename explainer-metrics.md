@@ -225,7 +225,7 @@ This is the top-level container returned by formatting a FormattedText object. I
 * Utility function for getting a position from an x/y coordinate pair (where the x/y coordinates 
    should be relative to the paragraph's coordinate system.
 
-| API | Description |
+| APIs on `FormattedTextParagraph` | Description |
 |---|---|
 | .`inlineSize` | Returns the bounding-box size in the inline direction or width for horizontal writing modes (double) |
 | .`blockSize` | Returns the bounding-box size in the block direction or height for horizontal writing modes (double) |
@@ -235,7 +235,177 @@ This is the top-level container returned by formatting a FormattedText object. I
 
 ### Thoughts on coordinate systems
 
+This API is designed with multiple writing modes (i.e., horizontal and vertical text) in mind. To 
+an author used to `ltr` direction and `horizontal-tb` block progression, having coordinates originate
+in the upper-left of some object's bounding box makes sense. We assert that in other writing modes
+the coordiante origin should align with the expectations of that layout mode. For example, if the 
+inline direction is top-to-bottom, starting at the right edge with block progression growing to the
+left, then the coordinate origin makes more sense in the upper-right of an object's bounding box. It
+is our intent then that when expressing coordinate positions, the origin is relative to the defined 
+(or implied) writing mode used in the `FormattedText` object.
 
+We acknowledge that the Canvas coordinate systems (e.g., 2d canvas and WebGL) are fixed, meaning that
+some writing modes, such as the `vertical-rl`, might need to perform a translation when rendering the
+formatted text objects into a canvas.
+
+We also considered **relative coordinate systems** for each "layer" of the nested objects in the
+formatted text metrics. For example, fragments inside of lines would have coordinate offsets that were
+**relative** to the line's origin. Such an approach only tends to add complication for authors who 
+will need to compute absolute offsets when working outside of the formatted text metrics (for example,
+in a canvas while responding to pointer events). For this reason, offset information at every step of
+the metrics API are **absolute** offsets from the origin of the formatted text paragraph (with one 
+exception: glyph advances).
+
+Using abolute offsets for every object may need to be revisited when considering metrics reported only
+for paragraph sub-parts (e.g., in the Layout API where there may be no paragraph objects available).
+
+For glyphs, the most vital piece of information for determining the position of the following glyph (in
+either horizontal or vertical orientation) is the `**advance**`. The value of `advance` is always 
+relataive for each glyph, and has already incorporated kerning for adjacent glyphs.
+
+## Positions – `FormattedTextPosition`
+
+Inspired by the
+[TextPosition](https://github.com/google/skia/blob/main/site/docs/dev/design/text_shaper.md#access-the-results-of-shaping-and-formatting)
+design, a `FormattedTextPosition` object provides the mapping between the formatted snapshot of the data
+model (e.g., the paragraph, lines, fragments and glyphs) and the data model itself, which contains the 
+source characters (Unicode code points) and their CSS-styled text runs. Positions always connect glyphs
+with characters and contain all necessary indexes to navigate the object structures to get between glyphs
+and characters. Like the rest of the formatted objects, positions are snapshots, and not updated as the
+model changes. (So don't change the model until you're done using a `FormattedTextPosition`!)
+
+![A FormattedTextPosition bridges between the data model (with its array of `FormattedTextRun`s containing characters) and the paragraph, line, fragment and glyph metrics objects. The position has text run references and character offsets to identify a precise location in the data model, and index values for the line, fragment, and glyph referenced by the associated character.](explainerresources/text-position-relationship.png)
+
+To find the relevant character(s) in the data model, positions have:
+
+* `FormattedTextRun` object reference (one-way reference)
+* Character offset (start and end) since some glyphs are formed from a sequence of characters
+   (Unicode combining characters, ligatures, etc., which vary by Font).
+
+To find the relevant glyph in the metrics objects, positions have:
+* Line index (within the paragraph)
+* Fragment index (within the line)
+* Glyph index (within the fragment)
+
+There are some interesting cases to explore when it comes to Glyph mapping from source characters.
+These are covered below in the fragments section.
+
+| APIs on `FormattedTextPosition` | Description |
+|---|---|
+| .`source` | A reference to the `FormattedTextRun` that contains the relevant character(s). The term `source` is generic in order to potentially support `Text` nodes as well in the future. |
+| .`characterOffsetStart` | The offset (unsigned long) within `source` that the associated glyph derives from (the start of the range if more than one character). |
+| .`characterOffsetEnd` | See above. If only one character maps to a single glyph, the start and end offsets will be the same. |
+| .`lineIndex` | The index into the `FormattedTextParagraph`'s `lines` array where the associated glyph can be found. |
+| .`fragmentIndex` | The index into the `FormattedTextLine`'s `textFragments` array where the associated glyph can be found. |
+| .`glyphIndex` | The index into the `FormattedTextFragment`'s `glyphs` array where the associated glyph can be found. |
+
+## Lines – `FormattedTextLine`
+
+The line is the bounding box of all the formatted fragments contained within the line (it has no 
+formatting itself). All fragments contained within the line are wholly contained within (no fragments 
+exist simultaneously in multiple lines). Note: due to justification or other inline alignment properties
+of the line, the line sizes and offsets may vary. The line's offsets are relative to the origin of its
+parent `FormattedTextParagraph` object.
+
+The line provides:
+
+* width/height (bounding box)
+* x/y offsets from the paragraph origin
+* array of `FormattedTextFragment` objects.
+* ⚠🚧TODO: add dominant baseline information?
+* Utility functions for getting the start position and end position of the characters that bookend
+   the line (e.g., the ability to identify where the line starts and ends in the data model)
+
+| APIs on `FormattedTextLine` | Description |
+|---|---|
+| .`inlineSize` | Same as `FormattedTextParagraph` definition. |
+| .`blockSize` | Same as `FormattedTextParagraph` definition. |
+| .`inlineOffset` | Returns the inline-direction offset from the `FormattedTextParagraph` origin or x-coordinate for horizontal writing modes (double) |
+| .`blockOffset` | Returns the block-direction offset from the `FormattedTextParagraph` origin or y-coordinate for horizontal writing modes (double) |
+| .`textFragments`[] | An array of `FormattedTextFragment` objects. |
+| .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the line (left side for horizontal LTR). |
+| .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the line (right side for horizontal LTR). |
+
+## Fragments – `FormattedTextFragment`
+
+The fragment is the smallest unit of same-formatted text in a line. Fragments always have consistent 
+directionality (they are post-BIDI algorithm processed, where alternating bidi sequences are split 
+into separate fragments). All glyphs within have the same font shaping properties applied. Because
+of these properties, the fragment metrics are quite similar to the information exposed through 
+[`measureText()`](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext).
+Consequently, the `FormattedTextFragment` extends the 
+[`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) interface.
+
+The fragment also holds all the glyph information. The glyph information is to be understood in the
+context of the fragment's format (its font metrics).
+
+Note: the `FormattedTextFragment` and future 
+[Font Metrics API](https://drafts.css-houdini.org/font-metrics-api/#fontmetrics) could be combined,
+though in this context the fragment is guaranteed to have consistent font metrics, so things like 
+the FontMetrics' `fonts` (a list) wouldn't apply.
+
+A Fragment object provides:
+* width/height
+* x/y offsets (from the paragraph's coordinate origin)
+* Everything on HTML's
+   [`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) interface
+* ⚠🚧 Formatting result values (for font, etc.). Note: we would like to understand the use cases 
+   for some of these better.
+* Array of glyph information
+* ⚠🚧 Potentially add baseline information (relative to the line) depending on use case?
+* Utility functions for getting the start position and end position of the characters that bookend 
+   the fragment (e.g., the ability to identify where the fragment starts and ends in the data model).
+* Utility function for getting a position for an arbitrary glyph in the fragment
+
+| APIs on `FormattedTextFragment` | Description |
+|---|---|
+| .`inlineSize` | Same as `FormattedTextParagraph` definition. |
+| .`blockSize` | Same as `FormattedTextParagraph` definition. |
+| .`inlineOffset` | Same as `FormattedTextLine` definition. |
+| .`blockOffset` | Same as `FormattedTextLine` definition. |
+| .`glyphs`[] | An array of dictionary objects containing glyph info (see next section). |
+| .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the fragment (direction-dependent). |
+| .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the fragment (right side for horizontal LTR). |
+| .`getGlyphPosition`(`index`) | Returns a `FormattedTextPosition` for the glyph at the given index (in the glyphs array). |
+| APIs from [`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) | `width` (total advance width for the fragment; duplicate of `inlineSize` for horizontal writing modes), `actualBoundingBoxLeft`, `fontBoundingBoxAscent`, etc. |
+| Formatting result information (fragment specific) | ⚠🚧 To discuss use cases for this data (and how to protect it for installed fonts `fontFamily`, `fontSize`, `direction`, `writingMode`). |
+
+### Fun with source characters and glyph mappings
+
+To form glyphs, font files have processing rules that are font-specific that determine how
+characters are mapped to particular glyphs. The presentation of a glyph may be processed differently
+depending on the font. For base ASCII characters the mapping is typically trivial--one character is
+associated with one glyph. However, for combining characters (and similar), font behavior may vary.
+For example, a font may map `á` (U+00E1 Latin Small Letter A with Acute) to a single glyph geometry 
+(statically or through a processing table). Another font might cause two glyphs (the decomposition of
+the glyph `á` into `a` U+0061 Latin Small Letter A and `◌́ ` U+0301 Combining Acute Accent) to be used
+and will alter the advance logic so that the comining character glyph is painted in the same
+location as the `a`.
+
+⚠🚧 We expect that additional experimentation is required to work out the best API given the range of
+possibilities and font combinations that exist.
+
+Our early thoughts are to model all cases where multiple glyphs are used for combining characters 
+as unique fragments. Thus, within a fragment we can assert that the set of glyphs with will always
+have positive advances. When a combining character (or string of them) is encountered, such a character
+would be placed into its own fragment object, and the offset of that fragment would overlap the previous
+fragment.
+
+In cases where combining characters result in a single glyph, the API is designed to naturally express
+a `FormattedTextPosition` that includes the start and end range of the contributing characters.
+
+## Glyphs – JS Object (dictionary)
+
+Plain JS object with keys/values:
+
+* advance – to be understood in the writing mode direction.
+* id - this glyph's font-specific index code (into the font). May be `null` for installed fonts.
+
+⚠🚧 There are lots of interesting metrics for glyphs; however, we'll want to understand use cases
+that necessitate exposing more information (e.g., `x`/`y` origin, `bearing`, bounding box geometry, 
+applied kerning, actual geometry like Path2D data, raw `ImageData`, etc.). Modeling a glyph with a 
+JavaScript object allows for easy extensibility. Alternatively, with only `advance` and `id`, this
+information could be expressed as arrays.
 
 ## Additional Accessibility Considerations for Metrics
 
