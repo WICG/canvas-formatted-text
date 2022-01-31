@@ -1,7 +1,9 @@
 Formatted Text - Data Model
 =============
-An object model for describing multi-line formatted text that does not use DOM Text 
-nodes or Elements (does not require DOM).
+The object model input that describes multi-line formatted text before it is shaped and formatted.
+The input consists of text (from JavaScript strings), text metadata (e.g., for internationalization),
+and text formats/style. Formatted text scenarios involve both document and non-document (Worker)
+scenarios and thus have no dependency on DOM Text nodes or Elements.
 
 This explainer focuses on the data model for formatted text. For a general overview 
 of the problem space, see the repo's [readme](README.md). Given this data model, there are 
