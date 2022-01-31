@@ -1,41 +1,46 @@
-Formatted Text - Data Model
+Formatted Text - Input Data Model
 =============
-The object model input that describes multi-line formatted text before it is shaped and formatted.
+The input object model that describes multi-line formatted text before it is shaped and formatted.
 The input consists of text (from JavaScript strings), text metadata (e.g., for internationalization),
 and text formats/style. Formatted text scenarios involve both document and non-document (Worker)
 scenarios and thus have no dependency on DOM Text nodes or Elements.
 
-This explainer focuses on the data model for formatted text. For a general overview 
-of the problem space, see the repo's [readme](README.md). Given this data model, there are 
-additional explainers for [how to render it](explainer-rendering.md) and 
-[how to obtain metrics from it](explainer-metrics.md).
+This explainer focuses on the input data model for formatted text. The output is captured in 
+a separate explainer for [formatted text metrics](explainer-metrics.md). The metrics can also
+be [rendered](explainer-rendering.md) if desired. For a general overview of the problem space,
+see the [readme](README.md).
 
 ## Providing an input model for formatted text
 
-On the web today, if you want to render text, you essentially have two options (generally): use
-the DOM (HTML's CharacterData/Text nodes or SVG Text-related Elements), in which case you put the
-text into the "retained" mode infrastructure of the web platform and it decides when and how
-to compose and render the text with declarative input from you (in the form of CSS); or you can
-use Canvas and "write" the text when and how you want with JavaScript (an "immediate" mode 
-approach). The Canvas provides very limited text support today and (by design) leaves any special
-formatting, text wrapping, international support, etc., up to the JavaScript author.
+On the web today, to render text there are two general options: use the DOM (HTML's 
+`CharacterData`/`Text` nodes or SVG Text-related Elements), where text is collected in the
+document's "retained" mode infrastructure; the web platform decides when and how to compose and
+render the text with declarative input from you (in the form of CSS); or you can use Canvas and
+"write" the text when and how you want with JavaScript (an "immediate" mode approach). Canvas
+provides very limited text support today and (by design) leaves any special formatting, text
+wrapping, international support, etc., up to the JavaScript author.
 
-We propose a hybrid approach that allows the author to retain the benefits of the DOM's "retained"
-mode objects, reusing the web platform's existing line formatting and wrapping engine along with 
-support for CSS, while also enabling authors to apply the objects to a Canvas how and when they
-choose. Alternately, authors may not desire to render the objects to a Canvas at all, and instead
-can run a given layout over them to obtain metrics useful in other scenarios.
+Of principle interest to most text-based scenarios is not the data model itself--that is,
+*applications will already have an existing data model*, and because these applications interface
+with the web, they use JavaScript primitives at some point to express their text. A secondary 
+"retained" data model specified just for this feature is unnecessary. Instead of creating platform
+objects to retain a data model for incremental updates, this feature only requries that existing
+JavaScript strings be structured and input into a "formatter" operation in a particular structure 
+in order to get to what is really important: [the output text metrics](explainer-metrics.md).
 
-In this explainer, a new formatted text data model is presented (the "retained" mode objects) which
-is the minimal necessary objects to allow CSS-styled text runs to be collected in a sequence
-for layout processing.
+In this explainer, the input structure for formatting text is presented along with a simple structure
+for creating reusable formatting.
 
 ### Principles
-* An imperative JavaScript-friendly text representation.
-* Scope to the needs of inline text layout.
-* Leverage CSS as the universal text layout system for the web (even in an imperative model) which also provides for future extensibility.
-* Avoid multi-level hierarchal text structures (which must be linearly iterated for rendering anyway)
-* Object-centric model (versus range+indexes) to improve encapsulation and avoid problems with overlapping formatting.
+* Enable re-use of existing appliction string data.
+* Scope formatting to the needs of inline text layout.
+* Leverage CSS as the universal text layout system for the web (even in an imperative model) which 
+    also provides for future extensibility.
+* Avoid multi-level hierarchal text structures (which ultimately must be linearly iterated for 
+    rendering)
+* Object-centric model (versus range+indexes) to improve encapsulation and avoid problems with 
+    overlapping formatting.
+* Extensibility for internationalization hints and reserved future scenarios.
 
 ### Primary Objects
 
