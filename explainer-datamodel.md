@@ -462,9 +462,11 @@ While the input to the `format` function is not expected to be accessible, the r
 will be useful in providing the means to enable fully accessible scenarios. This will be described in
 greater detail in the text metrics explaienr.
 
-## Rendering the FormattedText
-The [next explainer](explainer-rendering.md) describes the output from the `format` function.
+## The output of `format`
+The [next explainer](explainer-metrics.md) describes the output from the `format` function.
 
 ## Contributors:
+ [dlibby-](https://github.com/dlibby-),
+ [ijprest](https://github.com/ijprest),
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
