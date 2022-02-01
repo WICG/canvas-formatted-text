@@ -42,150 +42,128 @@ for creating reusable formatting.
     overlapping formatting.
 * Extensibility for internationalization hints and reserved future scenarios.
 
-### Formatting
+## Formatting text (`FormattedText.format()`)
 
 The data model comprises the parameters to the operation `format` which takes the input data model
-and produces output [text metrics](explainer-metrics.md). The input consists of:
+and produces output [text metrics](explainer-metrics.md) (`format` is a static method of the
+`FormattedText` constructor). The input consists of:
 
 1. text or an array of text
-2. metadata about all the text
+2. metadata/ style for all the text
 3. constraints for the formatting process
 
 Each of these is explained in more detail below.
 
-#### Expressing Text
+### Expressing text
 
 Text can be expressed as JavaScript strings, or as a JavaScript object with property named
 `text` that has a JavaScript string as its value.
 
 ```js
 // The following representations of text are equivalent:
-format( "hello" );
-format( { text: "hello" } );
+FormattedText.format( "hello" );
+FormattedText.format( { text: "hello" } );
 ```
 
 Text can also be expressed in separate runs (which are concatenated together when formatted)
 when wrapped in an Array. The following are equivalent:
 
 ```js
-// The following representations of text are equivalent:
-format( [ "hello", " world!" ] );
-format( [ { text: "hello" }, { text: " world!" } ] );
+// The following text runs are equivalent:
+FormattedText.format( [ "hello", " world!" ] );
+FormattedText.format( [ { text: "hello" }, { text: " world!" } ] );
 ```
 
-#### Adding metadata
+### Adding some style
 
-Metadata for all the text can be added 
-
-
-####
-
-The data model for formatted text is quite simple and involves only two objects: `FormattedText`
-is a container that orders a list of `FormattedTextRun` objects that contain the actual text and
-formatting information. (The `FormattedText` container can also have formatting applied that may
-inherit down to the `FormattedTextRun`s.)
-
-To maximize authoring convenience, we are proposing using the 
-[ObserverableArray pattern](https://heycam.github.io/webidl/#idl-observable-array) to allow authors
-to manage the contained array exactly like a JavaScript Array.
-
-<img src="explainerresources/formatted-text-om.png" alt="FormattedText object holds an array of FormattedTextRun objects through a property called 'textruns'." align="center"/>
-
-## Creating FormattedText and FormattedTextRun objects
-
-`FormattedText` and `FormattedTextRun` objects are created using the 'new' pattern:
+Style for *all the text* (general styles) are provided via the second parameter to `format`.
+Style input uses the same syntax as Element inline styles 
+(i.e., `<span style="style text syntax">`) and is ultimately parsed with the same CSS parser.
+The following formatted text outputs will all be blue:
 
 ```js
-let text = new FormattedText();
-let textrun = new FormattedTextRun();
+FormattedText.format( "hello world!", "color:blue" );
+FormattedText.format( [ "hello", " world!" ], "color: blue" );
+FormattedText.format( [ { text: "hello" }, { text: " world!" } ], " color :blue" );
 ```
 
-Attach `FormattedTextRun` objects to their `FormattedText` object's `textruns` property (an Array):
+Like text, style strings can be wrapped in a JavaScript object with property named `style` that 
+has the style text string as its value. The following are equivalent:
 
 ```js
-text.textruns.push( textrun );
+// The following are equivalent expressions of style:
+FormattedText.format( "hello world!", "color:blue" );
+FormattedText.format( "hello world!", { style: "color:blue" } );
 ```
 
-Add text to the `FormattedTextRun` object:
+### Styling specific text runs
+
+If specific text runs need to override or have specific style values, then style can also be
+added to the object-form of a text run. In this example, the word "brown" will be colored
+brown and bold and all the text will be italic:
 
 ```js
-textrun.text = "hello";
+FormattedText.format( [ "The quick ", 
+                        { text: "brown", style: "color:brown;font-weight:bold" },
+                        " fox jumps over the lazy dog." 
+                      ], "font-style:italic" );`
 ```
 
-To simplify creation of a `FormattedText` object and its textruns, the constructors also supports
-various overloads:
+And in the following example, all the text will be blue _except_ for the word brown, which
+will be colored brown:
 
 ```js
-let text = new FormattedText("hello", " world");
-// equivalent to:
-let text = new FormattedText();
-text.textruns.push( new FormattedTextRun( {text: "hello"} ) );
-text.textruns.push( new FormattedTextRun( " world" ) );
-// make a copy of all the text runs from another FormattedText object to be included in a new one:
-let text2 = new FormattedText( text.textruns );
-// copy everything from another FormattedText object and its text runs
-let text3 = new FormattedText( text2 );
+FormattedText.format( [ "The quick ", 
+                        { text: "brown", style: "color:brown" }, 
+                        " fox jumps over the lazy dog."
+                      ], { style: "color:blue" } );`
 ```
 
-## CSS Styling of FormattedText and text runs
-A wide range of inline layout-related CSS is supported on both the `FormattedText` and
-`FormattedTextRun` objects.
+A wide range of inline layout-related CSS is supported as style input to the `format` API.
 
-To set styles use the `styleMap` property (just like in HTML):
+Styles specified in the second parameter apply to all text runs except where overridden on
+individual text objects (in the first parameter).
+
+### Specifying constraints
+
+The final input to `format` are any constraints that should be applied to the formatted text.
+The primary constraint of interest to the API is the _inline size_ constraint: how many CSS pixels
+are available for text layout in the inline direction of the text. When text exceeds the threshold
+specified, it will wrap to a new line.
 
 ```js
-textrun2.styleMap.set("text-decoration", "underline");
+// Wrap any text that exceeds 150 pixels
+FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, 150 );
 ```
 
-The `styleMap` property is available on both the `FormattedText` and `FormattedTextRun` objects.
+## Comparison to HTML
 
-It is also possible to set multiple styles at once similar to how HTML parses the `style` attribute.
-Set styles all at once at construction time:
+`format` is used to drive the web platform's layout engine, but using the JavaScript-based data
+model described above. Therefore, the output of `format` should be the equivalent to what can be
+already performed in HTML using simple elements like `div` and `span`. The following two expressions
+are functionally equivalent, with the exception that the result of `format` has not been rendered
+(and thus can't be visualized yet):
 
 ```js
-let textrun2 = new FormattedTextRun( { style: "color: yellow; font: 15pt Verdana" } );
+FormattedText.format( [ "The quick ",
+                        { text: "brown", style: "color:brown;font-weight:bold" },
+                        " fox jumps over the lazy dog"
+                      ], null, 150 );
 ```
-
-Or set groups of styles together dynamically afterward:
-
-```js
-textrun2.setStyle( "color: yellow; font: 15pt Verdana" );
-```
-
-### Cascading of values from FormattedText to text runs
-
-CSS properties applied to the style map from the FormattedText that are specified to inherit
-from parent to child will do so from the FormattedText to it's text run child objects.
-
-## Simple Example
-
-In this example, we create a `FormattedText` object and its text runs that we eventually 
-want to render with the text "The quick **brown** fox jumps over the lazy dog" where the
-word "brown" is colored brown and bold. In the [rendering explainer](explainer-rendering.md) we
-add layout constraints and render it to a canvas; at present, while it resides in the data model
-it has no associated layout.
-
-```js
-// Collect text into a FormattedText object
-let formattedText = new FormattedText( "The quick ", "brown", " fox jumps over the lazy dog" );
-formattedText.textruns[1].setStyle( "color: brown; font-weight: bold" );
-```
-
-The above is the semantic equivalent to the following declarative HTML markup:
 
 ```html
-<div>
+<div style="width:150px">
   The quick <span style="color: brown; font-weight: bold">brown</span> fox jumps over the lazy dog
 </div>
 ```
 
-Where the `<div>` element is the container for an inline formatting context (and can be styled), 
+Above, the `<div>` element is the container for an inline formatting context (and can be styled), 
 and the `<span>` contains the formatting for the word "brown". More precisely, since each 
-`FormattedTextRun` object has the potential to be styled, the following markup better represents 
+text object in the array has the potential to be styled, the following markup better represents 
 the semantic equivalent:
 
 ```html
-<div>
+<div style="width:150px">
   <span>The quick </span>
   <span style="color: brown; font-weight: bold">brown</span>
   <span> fox jumps over the lazy dog</span>
@@ -196,18 +174,19 @@ the semantic equivalent:
 
 ### Vertical Text
 
-By leveraging existing CSS styles for writing modes and other related properties, the 
-formatted text data model can support a variety of vertical text scenarios. For 
-example, by simply leveraging the `writing-mode` property on the `FormattedText` 
-object, we can orient text in its traditional vertical direction:
+By leveraging existing CSS styles for writing modes and other related properties,  
+`format` can support a variety of vertical text scenarios. For example, by simply
+leveraging the `writing-mode` property we can orient text in its traditional vertical
+direction:
 
 ```js
-let proverb = new FormattedText( "不怕慢，", "就怕站" );
-proverb.styleMap.set( "writing-mode", "vertical-rl" );
-proverb.textruns[1].styleMap.set( "font-weight", "bold" );
+let bold = "font-weight:bold";
+let vertical = "writing-mode:vertical-rl";
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vertical );
 ```
 
-Together with a nice font and constrained vertical layout bounds, this would render as:
+Together with a nice font and constrained vertical (inline) layout bounds, this will
+render as:
 
 <img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chineese proverb, vertically oriented in two columns, the second column bold">
 
@@ -215,65 +194,99 @@ In combination with other related CSS properties, many other vertical text layou
 possible:
 
 ```js
-let proverbEn = new FormattedText( "It's better to make slow progress", " than no progress at all" );
-proverbEn.styleMap.set( "writing-mode", "vertical-lr" );
-proverbEn.styleMap.set( "text-orientation", "upright" );
-proverbEn.styleMap.set( "line-height", "2" );
-proverbEn.styleMap.set( "text-align", "center" );
-proverbEn.textruns[1].styleMap.set( "font-weight", "bold" );
+let bold = "font-weight:bold";
+let styles  = "writing-mode: vertical-lr;";
+    styles += "text-orientation: upright;";
+    styles += "line-height: 2;";
+    styles += "text-align: center";
+FormattedText.format( [ "It's better to make slow progress", 
+                        { text: " than no progress at all", style: bold }
+                      ], styles);
 ```
 
 When rendered in an inline-direction constrained space, this would render as:
 
 <img src="explainerresources/vertical-text-en.png" alt="The text 'It's better to make slow progress than no progress at all' rendered vertically from left-to-right in five columns">
 
+### Reusing styles (`FormattedTextStyle`)
+
+When style text strings are passed to the `format` function, they must be parsed into
+CSS properties (including verifying valid syntax). This process is usually fast but not
+free. It is likely that when preparing to format many text strings, or when repeatedly 
+calling `format` in performance critical code paths, there are opportunities to re-use 
+sets of CSS styles as a unit.
+
+A new write-once object is introduced to collect and cache these styles. It makes use
+of a [StylePropertyMapReadOnly](https://drafts.css-houdini.org/css-typed-om/#stylepropertymapreadonly)
+to reflect the parsed values for read-only inspection following construction:
+
+```js
+// Save the upright text styles from the previous example for later re-use
+let styles = new FormattedTextStyle( "writing-mode: vertical-lr;" +
+                                     "text-orientation: upright;" +
+                                     "line-height: 2;" + 
+                                     "text-align: center" );
+styles.styleMap.has( "text-orientation" ); // returns true
+styles.styleMap.size; // returns 4, the number of declarations in the map
+for ( let [prop, val] of styles ) { // Enumerate everything in the map
+   console.log( `${prop}: ${val}` );
+}
+```
+
+The `FormattedTextStyle` object can be used in all the places in the data model that
+accept a style text string. For example the following are equivalent:
+
+```js
+let bold = "font-weight:bold";
+let vertical = "writing-mode:vertical-rl";
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vertical );
+
+let reusableBold = new FormattedTextStyle( "font-weight:bold" );
+let reusableVertical = new FormattedTextStyle( "writing-mode:vertical-rl" );
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold ], reusableVertical );
+```
+
 ### How much CSS should be supported?
 
-`FormattedText` and `FormattedTextRun` objects support various CSS properties that 
-influence how the text's lines will ultimately be positioned. There are also many
-CSS properties that do not apply to text, that convert between typical text layout
-and other layouts, or that take normal flow content out of flow (e.g., `float`, `position`, 
-`display`, etc.). For the purposes of a formatted text object model, not all CSS properties
-can or should be supported. The guidelines for what CSS to support and what not to support 
-follow.
+The `format` function support various CSS properties that influence how the text's lines
+will ultimately be positioned. There are also many CSS properties that do not apply to text,
+that convert between typical text layout and other layouts, or that take normal flow content 
+out of flow (e.g., `float`, `position`, `display`, etc.). For the purposes of a formatted 
+text object model, not all CSS properties can or should be supported. The guidelines for
+what CSS to support and what not to support follow.
 
-#### Focus on text-related CSS properties
+### Focus on text-related CSS properties
 
 We believe it makes sense to only support CSS properties that provide specific features
-for inline-level content (text) and the management of the text's container. Other properties,
-especially those that would change the layout characteristics of `FormattedTextRun`
-objects from their assumed inline-level nature, will not be supported. In this data model
-we want to keep the semantics of a `FormattedTextRun` consistent with the CSS that can be
-applied.
+for inline-level content (text) and the management of the text's container (the metadata
+parameter). Other properties, especially those that would change the layout characteristics 
+of text objects from their assumed inline-level nature, will not be supported. In the data
+model we keep the semantics of text runs consistent with the CSS that can be applied.
 
-Applying the above principle to `FormattedTextRun` objects means that `float` would not
+Applying the above principle means that `float` would not
 be supported because it has the effect of changing the object's computed display value 
-from inline to block (taking it out-of-flow). `position: absolute` also takes
-the object out of the normal flow. Likewise, the `width` and `height` properties would
+from inline to block (taking it out-of-flow). `position: absolute` as a metadata property also takes
+the object out of the normal flow. Likewise, the `width` and `height` properties on specific text runs would
 be ignored because they do not apply to inline-level elements. Attempting to set these 
-properties would have no effect. On the other hand, `padding` would be supported and 
-applied to `FormattedTextRun` objects in accordance with the rules of CSS inline layout,
+properties would have no effect. On the other hand, `padding` **would be supported** and 
+applied to text runs in accordance with the rules of CSS inline layout,
 e.g., the inline-direction `padding` values are taken into account while the 
 block-direction values are not.
 
-The `FormattedText` object is an independent containing block for text. It is essentially a 
+The container for text runs is an independent containing block. It is essentially a 
 `display: flow-root` object that establishes an inline formatting context for its children.
-The `FormattedText` object has no positional relationship with anything other than its
-children, and so values like `top`, `right`, `bottom`, and `left` do not apply (i.e., the 
-object acts as its own initial containing block). Positioning the object for the purpose of
-rendering in some context must be done separately. In order to render or extract useful metrics
-from the `FormattedText` object, final dimensions for its size must be supplied (see 
-[Rendering explainer](explainer-rendering.md)) which are used to resolve relative values in
-supported properties like `width` and `height`.
+When used in the metadata parameter, properties like `top`, `right`, `bottom`, and `left` do
+not apply (i.e., the text run container acts as its own initial containing block). Positioning
+the resulting formatted text for the purpose of rendering in some context must be done separately.
 
-In some cases, we imagine it will be useful to allow the `FormattedText` object to assume
-alternate layout container types where those alternate types provide unique text layout
-capabilities. For example, we expect to support `FormattedText` objects with an inner 
-display type of `ruby` in order to become a Ruby container and enable the use of Ruby
-annotated layout. Other container types are not currently planned to initially support 
+In some cases, we imagine it will be useful to allow `format` metadata properties to support 
+some limited alternate layout container types where those alternate types provide unique text layout
+capabilities. For example, we expect to support an inner display type of `ruby` in order to 
+become a Ruby container and enable the use of Ruby annotated layout. Other container types are
+not currently planned to initially support 
 but are good long-term candidates (e.g., multi-column containers created via the `columns`
-shorthand property), while still others are less-likely to be supported (e.g., flex and 
-grid container types, which are less useful for formatted text scenarios).
+shorthand property), while still others are less-likely to be supported (e.g., `flex` and 
+`grid` container types, which are less useful for formatted text scenarios).
 
 There are various CSS properties that provide helpful graphical emphasis to text that are 
 also supported. These are for convenience in supporting common text formatting scenarios
@@ -285,7 +298,7 @@ many of these CSS properties will be supported. Some supported examples include:
 (where the metrics and composition processing do not require external dependencies, such as 
 image resources typically loaded by `url()` functions).
 
-#### Future extensions 
+### Future extensions 
 
 By leveraging CSS, we get the added benefit of a well-known constraint language for 
 expressing box bounds and the expected behavior for content (in our case formatted text 
@@ -293,13 +306,16 @@ content) that overflows those bounds. `width` and `height` and corresponding `mi
 or `max-height` properties express the desired constraints for eventual line-box 
 computation when it comes to rendering the object model or returning metrics. Similarly,
 `overflow` and `clip-path` can further ensure the text content expands or is clipped to
-fit the desired constraints. These properties would only apply on the `FormattedText` 
-container object.
+fit the desired constraints. These properties would only apply in the metadata parameter
+of `format`.
 
 CSS continues to evolve, and it makes sense to extend relevant new CSS properties to
 this object model as they become a part of the web platform. For example, while not
 widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
 and CSS Exclusions provide exciting growth opportunities for text using this model.
+
+
+
 
 ## WebIDL
 
