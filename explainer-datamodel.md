@@ -314,8 +314,29 @@ this object model as they become a part of the web platform. For example, while 
 widely supported at the time of writing, support for `shape-inside` (CSS Shapes L2)
 and CSS Exclusions provide exciting growth opportunities for text using this model.
 
+## Internationalization
 
+CSS provides various existing properties for handling internationalization of text, such
+as `writing-mode`, `direction`, `unicode-bidi`, and others. However, it does not have a
+property for expressing language (CSS Selectors provide `:lang(xx)` but this is not a 
+property).
 
+Therefore, all text objects (and metadata objects) will support an optional `lang` property
+whose value will accept the set of supported values of the equivalent HTML `lang` attribute
+(or XML/XHTML `xml:lang` attribute).
+
+An example where the `lang` property is used to provide clarify on the text object directly:
+
+```js
+FormattedText.format( { text: "不怕慢就怕站", lang: "zh-CN" } ); 
+```
+
+Or it can be applied to the metadata object (generally the preferred option unless there
+are multiple text runs of differing language):
+
+```js
+FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "color:red" } );
+```
 
 ## WebIDL
 
@@ -359,14 +380,14 @@ interface mixin FormattedTextStylable {
 }; 
 ```
 
-## Supported CSS on FormattedText and text runs
+## Supported CSS Table
 
 We've compiled a list of text-related (or generally applicable) CSS properties that we believe make
-sense to support on `FormattedText` and `FormattedTextRun` objects. This list is not exhaustive.
+sense to support on metadata and text objects. This list is not exhaustive.
 For example, it does not include many of the new logical properites such as `inline-size` for 
 `width`. This list is provided for potential testing purposes and to facilitate discussion.
 
-| CSS Property | FormattedText | FormattedTextRun | inherits | Notes |
+| CSS Property | metadata object | text object | inherits | Notes |
 |--------------|---------------|------------------|----------|-------|
 | background | ✔ | ✔ | no | background-attachment, background-origin, background-position, background-repeat, background-size operate on an external resource image and will be ignored. Background-image will only support `<gradient>` functions |
 | border | ✔ | ✔ | no |  |
@@ -437,29 +458,12 @@ For example, it does not include many of the new logical properites such as `inl
 
 ## Accessibility Considerations
 
-Because the `FormattedText` object is a retained data model for text, it has the potential to be a 
-fully accessible object (except it has no "view"--which might be an advantage in many scenarios).
-We are still thinking about what it would mean to make formatted text accessible and whether it makes
-sense. We welcome your comments and issues in this regard.
-
-## Alternatives and Prior Art
-
-The formatted text object model is designed to be very high-level, combining a simple linear text-run
-model with the familiarity of CSS. We recognize that one of the significant gaps in the platform is the
-lack of ability to understand how text was ultimately formatted. This information is critical in many
-scenarios where web developers want to take more control over text layout. While not detailed in this
-document, we do plan to work on a detailed metrics API that we aspire to apply to both this object model
-as well as in CSS Houdini's Layout API and even to regular DOM elements hosting inline formatting contexts.
-
-As we move into investigating metrics, we intend to work closely with the proponents of the 
-[Text Shaping API](https://docs.google.com/document/d/1hBHETpotl4cnvN1dDts_gb3hGTF70_DxjCcERoDrX-A/edit?ts=602d763a#heading=h.xwhbmm78cnfj)
-to be sure we are addressing relevant use cases.
-
-The SKIA TextBlob and [TextBlobBuilder](https://api.skia.org/classSkTextBlobBuilder.html) provide a related API for shaping text within a bounds.
+While the input to the `format` function is not expected to be accessible, the resulting text metrics output
+will be useful in providing the means to enable fully accessible scenarios. This will be described in
+greater detail in the text metrics explaienr.
 
 ## Rendering the FormattedText
-The [next explainer](explainer-rendering.md) describes how to take the data model representation of
-text and make is show up on screen.
+The [next explainer](explainer-rendering.md) describes the output from the `format` function.
 
 ## Contributors:
  [sushraja-msft](https://github.com/sushraja-msft),
