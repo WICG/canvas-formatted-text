@@ -343,40 +343,24 @@ FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "col
 ```webidl
 [Exposed=Window,Worker] 
 interface FormattedText { 
-  constructor();
-  constructor(DOMString textRunText...);
-  constructor(sequence<FormattedTextRunInit> textRunInit);
-  constructor(FormattedText copyConstructorInit);
-
-  attribute ObservableArray<FormattedTextRun> textruns; 
-}; 
-FormattedText includes FormattedTextStylable; 
-
-dictionary FormattedTextRunInit { 
-  DOMString text = "";
-  DOMString style = "";
-}; 
+  static FormattedText format( ( DOMString or FormattedTextRunInit or sequence<( DOMString or FormattedTextRunInit )> ) text,
+                               optional ( DOMString or FormattedTextStyle or FormattedTextMetadataInit ) metadata,
+                               optional double inlineSize );
+};
 
 [Exposed=Window,Worker] 
-interface FormattedTextRun { 
-  constructor();
-  constructor(DOMString text);
-  constructor(FormattedTextRunInit textRunInit);
+interface FormattedTextStyle {
+  constructor( DOMString styleText );
+  [SameObject] readonly attribute StylePropertyMapReadOnly styleMap;
+};
 
-  attribute DOMString text;
-
-  // owning FormattedText (if any) 
-  readonly attribute FormattedText? parent;        // null if not contained in a FormattedText
- 
-  // navigation in the array 
-  readonly attribute FormattedTextRun? next;       // null if last or not contained in FormattedText
-  readonly attribute FormattedTextRun? previous;   // null if first or not contained in FormattedText
+dictionary FormattedTextMetadataInit { 
+  ( DOMString or FormattedTextStyle) style;
+  DOMString lang;
 }; 
-FormattedTextRun includes FormattedTextStylable; 
- 
-interface mixin FormattedTextStylable { 
-  [SameObject] readonly attribute StylePropertyMap styleMap;
-  void setStyle(USVString cssText);
+
+dictionary FormattedTextRunInit : FormattedTextMetadataInit { 
+  DOMString text = "";
 }; 
 ```
 
