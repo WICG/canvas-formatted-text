@@ -42,7 +42,43 @@ for creating reusable formatting.
     overlapping formatting.
 * Extensibility for internationalization hints and reserved future scenarios.
 
-### Primary Objects
+### Formatting
+
+The data model comprises the parameters to the operation `format` which takes the input data model
+and produces output [text metrics](explainer-metrics.md). The input consists of:
+
+1. text or an array of text
+2. metadata about all the text
+3. constraints for the formatting process
+
+Each of these is explained in more detail below.
+
+#### Expressing Text
+
+Text can be expressed as JavaScript strings, or as a JavaScript object with property named
+`text` that has a JavaScript string as its value.
+
+```js
+// The following representations of text are equivalent:
+format( "hello" );
+format( { text: "hello" } );
+```
+
+Text can also be expressed in separate runs (which are concatenated together when formatted)
+when wrapped in an Array. The following are equivalent:
+
+```js
+// The following representations of text are equivalent:
+format( [ "hello", " world!" ] );
+format( [ { text: "hello" }, { text: " world!" } ] );
+```
+
+#### Adding metadata
+
+Metadata for all the text can be added 
+
+
+####
 
 The data model for formatted text is quite simple and involves only two objects: `FormattedText`
 is a container that orders a list of `FormattedTextRun` objects that contain the actual text and
