@@ -117,6 +117,8 @@ get lots of feedback.
    * [Text API Overview](https://github.com/google/skia/blob/main/site/docs/dev/design/text_overview.md)
    * [Canvas2D extensions for Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_c2d.md)
    * [Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_shaper.md)
+* ECMA 402 [proposal to expose "line break opportunities"](https://github.com/tc39-transfer/proposal-intl-segmenter-v2) of text which implement the
+    [Unicode® Standard Annex #14 UNICODE LINE BREAKING ALGORITHM](https://www.unicode.org/reports/tr14/)
 
 ## Implementations
 
