@@ -24,7 +24,7 @@ Of principle interest to most text-based scenarios is not the data model itself-
 *applications will already have an existing data model*, and because these applications interface
 with the web, they use JavaScript primitives at some point to express their text. A secondary 
 "retained" data model specified just for this feature is unnecessary. Instead of creating platform
-objects to retain a data model for incremental updates, this feature only requries that existing
+objects to retain a data model for incremental updates, this feature only requires that existing
 JavaScript strings be structured and input into a "formatter" operation in a particular structure 
 in order to get to what is really important: [the output text metrics](explainer-metrics.md).
 
@@ -32,7 +32,7 @@ In this explainer, the input structure for formatting text is presented along wi
 for creating reusable formatting.
 
 ### Principles
-* Enable re-use of existing appliction string data.
+* Enable re-use of existing application string data.
 * Scope formatting to the needs of inline text layout.
 * Leverage CSS as the universal text layout system for the web (even in an imperative model) which 
     also provides for future extensibility.
@@ -42,7 +42,7 @@ for creating reusable formatting.
     overlapping formatting.
 * Extensibility for internationalization hints and reserved future scenarios.
 
-## Formatting text (`FormattedText.format()`)
+## Formatting text (`FormattedText.format`)
 
 The data model comprises the parameters to the operation `format` which takes the input data model
 and produces output [text metrics](explainer-metrics.md) (`format` is a static method of the
@@ -188,7 +188,7 @@ FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vert
 Together with a nice font and constrained vertical (inline) layout bounds, this will
 render as:
 
-<img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chineese proverb, vertically oriented in two columns, the second column bold">
+<img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chinese proverb, vertically oriented in two columns, the second column bold">
 
 In combination with other related CSS properties, many other vertical text layouts are
 possible:
@@ -434,7 +434,7 @@ For example, it does not include many of the new logical properites such as `inl
 
 * **CSS pseudo-elements** (`::first-letter`, `::first-line`, `::before`, `::after`). Pseudo-elements
    would require some unique way to specify the style map for these. A workaround for `::first-letter` 
-   is relatively easy (separating it into a separate `FormattedTextRun`, or implementing support for
+   is relatively easy (separating it into a separate text runs, or implementing support for
    the related property `initial-letter`), but `::first-line` is harder to target given it depends on 
    where the line breaks.
 *  explicit values of `inherit` on CSS properties that aren't specified to inherit by default will not
@@ -444,7 +444,7 @@ For example, it does not include many of the new logical properites such as `inl
 
 While the input to the `format` function is not expected to be accessible, the resulting text metrics output
 will be useful in providing the means to enable fully accessible scenarios. This will be described in
-greater detail in the text metrics explaienr.
+greater detail in the text metrics explainer.
 
 ## The output of `format`
 The [next explainer](explainer-metrics.md) describes the output from the `format` function.
