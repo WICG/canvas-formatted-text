@@ -222,7 +222,7 @@ let meta = "writing-mode:vertical-rl;font-size:36pt";
 FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, { height: 200 } );
 ```
 
-When rendered, and height-constrained as indicated, this will render as:
+[When rendered](explainer-rendering.md), and height-constrained as indicated, this will render as:
 
 <img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chinese proverb, vertically oriented in two columns, the second column bold">
 
@@ -234,13 +234,14 @@ let bold = "font-weight:bold";
 let styles  = "writing-mode: vertical-lr;";
     styles += "text-orientation: upright;";
     styles += "line-height: 2;";
-    styles += "text-align: center";
+    styles += "text-align: center;";
+    styles += "font-size: 12pt";
 FormattedText.format( [ "It's better to make slow progress", 
                         { text: " than no progress at all", style: bold }
-                      ], styles);
+                      ], styles, { height: 250 } );
 ```
 
-When rendered in an inline-direction constrained space, this would render as:
+This might render as:
 
 <img src="explainerresources/vertical-text-en.png" alt="The text 'It's better to make slow progress than no progress at all' rendered vertically from left-to-right in five columns">
 
