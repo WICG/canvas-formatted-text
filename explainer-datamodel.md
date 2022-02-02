@@ -127,14 +127,25 @@ individual text objects (in the first parameter).
 ### Specifying constraints
 
 The final input to `format` are any constraints that should be applied to the formatted text.
-The primary constraint of interest to the API is the _inline size_ constraint: how many CSS pixels
-are available for text layout in the inline direction of the text. When text exceeds the threshold
-specified, it will wrap to a new line.
+The primary constraints of interest to the API are the width and height of the containing block:
+how many CSS pixels are available for text layout.
+
+The layout flow will follow any writing-mode direction specified in the meta object, so in
+`horizontal-lr` (e.g., English) a width constraint on the containing block will cause line 
+wrapping in the inline direction; overflow will occur in the vertical direction. For specified 
+writing-modes such as `vertical-rl` (e.g., Chinese) a width constraint on the containing block 
+will only affect where overflow occurs--the line will not wrap because it is assumed to have 
+infinite vertical space to layout. To cause wrapping with `vertical-rl` writing modes, specify
+a height constraint instead.
+
+Constraints are specified on a constraint object using a `width` or `height` property:
 
 ```js
 // Wrap any text that exceeds 150 pixels
-FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, 150 );
+FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { width: 150 } );
 ```
+
+Values less than zero are truncated to 0. Omitted values are assumed to be infinite.
 
 ## Comparison to HTML
 
@@ -148,7 +159,7 @@ are functionally equivalent, with the exception that the result of `format` has 
 FormattedText.format( [ "The quick ",
                         { text: "brown", style: "color:brown;font-weight:bold" },
                         " fox jumps over the lazy dog"
-                      ], null, 150 );
+                      ], null, { width: 150 } );
 ```
 
 ```html
@@ -195,9 +206,6 @@ FormattedText.format( [ "The quick ",
   </span>
 </div>
 ```
-
-In this case, with no inline size specified defined, the div has infinite width to layout out the 
-text (no wrapping is possible).
 
 ## CSS to achieve advanced scenarios
 
@@ -374,7 +382,7 @@ FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "col
 interface FormattedText { 
   static FormattedText format( ( DOMString or FormattedTextRunInit or sequence<( DOMString or FormattedTextRunInit )> ) text,
                                optional ( DOMString or FormattedTextStyle or FormattedTextMetadataInit ) metadata,
-                               optional double inlineSize );
+                               optional FormattedTextConstraints constraints );
 };
 
 [Exposed=Window,Worker] 
@@ -391,6 +399,11 @@ dictionary FormattedTextMetadataInit {
 dictionary FormattedTextRunInit : FormattedTextMetadataInit { 
   DOMString text = "";
 }; 
+
+dictionary FormattedTextConstraints {
+  unsigned long width;
+  unsigned long height;
+};
 ```
 
 ## Supported CSS Table
