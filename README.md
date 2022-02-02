@@ -62,7 +62,7 @@ breaking algorithm:
   [Graphemes](https://en.wikipedia.org/wiki/Grapheme). Break opportunities are
   based primarily on the Unicode Spec but also use dictionaries for languages
   like Thai and French that dictate additional line breaking rules.
-* Identify grapheme clusters. Graphemes are character combinations (such as
+* Identify grapheme clusters. Grapheme clusters are character combinations (such as
   [Diacritics](https://en.wikipedia.org/wiki/Diacritic) and
   [Ligatures](https://en.wikipedia.org/wiki/Orthographic_ligature)) that result
   in a single glyph and hence should not be broken up.
