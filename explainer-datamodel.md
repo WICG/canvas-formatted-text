@@ -375,6 +375,19 @@ are multiple text runs of differing language):
 FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "color:red" } );
 ```
 
+### Bidi Text
+
+No additional work is needed from web developers to support bidi text. At `format` time,  bidi
+analysis is done on the input text which creates internal bidi runs if necessary. For example:
+
+```js
+FormattedText.format( "Sample arabic بمدينة مَايِنْتْس، ألمانيا text.", "font:30px Arial", { width: 350 } );
+```
+
+Might produce the following rendered output:
+
+!["Wrapped text rendered in a canvas."](explainerresources/Example2.png)
+
 ## WebIDL
 
 ```webidl
