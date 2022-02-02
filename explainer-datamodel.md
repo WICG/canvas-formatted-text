@@ -218,12 +218,11 @@ direction:
 
 ```js
 let bold = "font-weight:bold";
-let vertical = "writing-mode:vertical-rl";
-FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vertical );
+let meta = "writing-mode:vertical-rl;font-size:36pt";
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, { height: 200 } );
 ```
 
-Together with a nice font and constrained vertical (inline) layout bounds, this will
-render as:
+When rendered, and height-constrained as indicated, this will render as:
 
 <img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chinese proverb, vertically oriented in two columns, the second column bold">
 
