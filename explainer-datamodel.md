@@ -145,7 +145,7 @@ Constraints are specified on a constraint object using a `width` or `height` pro
 FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { width: 150 } );
 ```
 
-Values less than zero are truncated to 0. Omitted values are assumed to be infinite.
+`width` and `height` are `unsigned long` values. Omitted values are assumed to be infinite.
 
 ## Comparison to HTML
 
