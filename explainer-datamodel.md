@@ -153,22 +153,51 @@ FormattedText.format( [ "The quick ",
 
 ```html
 <div style="width:150px">
-  The quick <span style="color: brown; font-weight: bold">brown</span> fox jumps over the lazy dog
+  <span id="meta_object">
+    The quick <span style="color: brown; font-weight: bold">brown</span> fox jumps over the lazy dog
+  </span>
 </div>
 ```
 
-Above, the `<div>` element is the container for an inline formatting context (and can be styled), 
-and the `<span>` contains the formatting for the word "brown". More precisely, since each 
-text object in the array has the potential to be styled, the following markup better represents 
+Above, the `<div>` element is the container for an inline formatting context which sets the 
+inline wrapping width, and the `<span id="meta_object">` gets any meta object styling (in this
+case, nothing), and contains the formatting for the text runs. The text run styles on the word
+"brown" are applied to its immediate containing span. More precisely: since each text object
+in the array has the potential to be styled, the following markup better represents 
 the semantic equivalent:
 
 ```html
 <div style="width:150px">
-  <span>The quick </span>
-  <span style="color: brown; font-weight: bold">brown</span>
-  <span> fox jumps over the lazy dog</span>
+  <span id="meta_object">
+    <span>The quick </span>
+    <span style="color: brown; font-weight: bold">brown</span>
+    <span> fox jumps over the lazy dog</span>
+  </span>
 </div>
 ```
+
+Another illustrative comparison shows how style on the meta object provided to `format` could be
+visualized:
+
+```js
+FormattedText.format( [ "The quick ", 
+                        { text: "brown", style: "color: brown" }, 
+                        " fox jumps over the lazy dog."
+                      ], { style: "color: blue" } );`
+```
+
+```html
+<div>
+  <span id="meta_object" style="color: blue">
+    <span>The quick </span>
+    <span style="color: brown">brown</span>
+    <span> fox jumps over the lazy dog</span>
+  </span>
+</div>
+```
+
+In this case, with no inline size specified defined, the div has infinite width to layout out the 
+text (no wrapping is possible).
 
 ## CSS to achieve advanced scenarios
 
