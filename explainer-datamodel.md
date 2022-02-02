@@ -106,7 +106,7 @@ brown and bold and all the text will be italic:
 FormattedText.format( [ "The quick ", 
                         { text: "brown", style: "color:brown;font-weight:bold" },
                         " fox jumps over the lazy dog." 
-                      ], "font-style:italic" );`
+                      ], "font-style:italic" );
 ```
 
 And in the following example, all the text will be blue _except_ for the word brown, which
@@ -116,7 +116,7 @@ will be colored brown:
 FormattedText.format( [ "The quick ", 
                         { text: "brown", style: "color:brown" }, 
                         " fox jumps over the lazy dog."
-                      ], { style: "color:blue" } );`
+                      ], { style: "color:blue" } );
 ```
 
 A wide range of inline layout-related CSS is supported as style input to the `format` API.
@@ -183,7 +183,7 @@ visualized:
 FormattedText.format( [ "The quick ", 
                         { text: "brown", style: "color: brown" }, 
                         " fox jumps over the lazy dog."
-                      ], { style: "color: blue" } );`
+                      ], { style: "color: blue" } );
 ```
 
 ```html
