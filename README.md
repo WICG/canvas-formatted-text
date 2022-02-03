@@ -211,6 +211,7 @@ We are currently evaluating whether this API would increase fingerprinting surfa
 area and will update this section with our findings. We welcome any community feedback.
 
 ## Contributors:
+(In alphabetical order)
 
  [dlibby-](https://github.com/dlibby-),
  [ijprest](https://github.com/ijprest),
