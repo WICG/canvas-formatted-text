@@ -20,7 +20,7 @@ render the text with declarative input from you (in the form of CSS); or you can
 provides very limited text support today and (by design) leaves any special formatting, text
 wrapping, international support, etc., up to the JavaScript author.
 
-Of principle interest to most text-based scenarios is not the data model itself--that is,
+Of principal interest to most text-based scenarios is not the data model itself--that is,
 *applications will already have an existing data model*, and because these applications interface
 with the web, they use JavaScript primitives at some point to express their text. A secondary 
 "retained" data model specified just for this feature is unnecessary. Instead of creating platform
