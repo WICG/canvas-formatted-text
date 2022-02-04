@@ -287,7 +287,7 @@ FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold
 
 ### How much CSS should be supported?
 
-The `format` function support various CSS properties that influence how the text's lines
+The `format` function supports various CSS properties that influence how the text's lines
 will ultimately be positioned. There are also many CSS properties that do not apply to text,
 that convert between typical text layout and other layouts, or that take normal flow content 
 out of flow (e.g., `float`, `position`, `display`, etc.). For the purposes of a formatted 
