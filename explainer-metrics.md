@@ -102,7 +102,7 @@ The `FormattedText` is a container for all the input data model's metrics. It co
 to get additional line, fragment, and glyph information. The object hierarchy is shown below (note
 the image shows lines in a horizontal writing mode--but vertical writing modes are supported):
 
-![A FormattedTextParagraph box contains four horizontal FormattedTextLine objects. Each line object contains one or more FormattedTextFragment objects. Each fragment object is a container for glyph information.](explainerresources/metrics-structure.png)
+![A FormattedText box contains four horizontal FormattedTextLine objects. Each line object contains one or more FormattedTextFragment objects. Each fragment object is a container for glyph information.](explainerresources/metrics-structure.png)
 
 These objects (that contain a snapshot of metrics and layout information) may be rendered independently.
 We suggest APIs to render the entire paragraph, a single line, or (needs validating) any sequence of
@@ -245,7 +245,7 @@ These are covered below in the fragments section.
 | .`sourceIndex` | An index of the input text object or string that contains the relevant character(s). The term `source` is generic in order to potentially support `Text` nodes as well in the future. **Note**: will need to resolve what the index means for DOM trees with hierarchies. |
 | .`characterOffsetStart` | The offset (unsigned long) within `source` that the associated glyph derives from (the start of the range if more than one character). |
 | .`characterOffsetEnd` | See above. If only one character maps to a single glyph, the start and end offsets will be the same. |
-| .`lineIndex` | The index into the `FormattedTextParagraph`'s `lines` array where the associated glyph can be found. |
+| .`lineIndex` | The index into the `FormattedText`'s `lines` array where the associated glyph can be found. |
 | .`fragmentIndex` | The index into the `FormattedTextLine`'s `textFragments` array where the associated glyph can be found. |
 | .`glyphIndex` | The index into the `FormattedTextFragment`'s `glyphs` array where the associated glyph can be found. |
 
