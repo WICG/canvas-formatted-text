@@ -445,7 +445,7 @@ For example, it does not include many of the new logical properites such as `inl
 | font-feature-settings | ✔ | ✔ | yes |  |
 | font-kerning | ✔ | ✔ | yes |  |
 | font-size-adjust | ✔ | ✔ | yes |  |
-| height | ✔ |  | no |  |
+| height | ❌ |  | no |  |
 | hyphens | ✔ | ✔ | yes |  |
 | letter-spacing | ✔ | ✔ | yes |  |
 | line-break | ✔ | ✔ | yes |  |
@@ -481,7 +481,7 @@ For example, it does not include many of the new logical properites such as `inl
 | transform-origin | ✔ |  | no |  |
 | unicode-bidi | ✔ | ✔ | no |  |
 | white-space | ✔ | ✔ | yes |  |
-| width | ✔ |  | no |  |
+| width | ❌ |  | no |  |
 | word-break | ✔ | ✔ | yes |  |
 | word-spacing | ✔ | ✔ | yes |  |
 | word-wrap | ✔ | ✔ | yes |  |
