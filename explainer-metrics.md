@@ -19,15 +19,15 @@ You can also learn more about the [formatted text data model](explainer-datamode
 
 # Use cases
 
-## 1. Use case: paragraph placement
+## 1. Use case: text placement
 
 This use case is the most basic use case we can imagine--identifying the placement of some
 Formatted Text into a view layer (like Canvas). Placement needs two things, a reference
 coordinate (x/y) and size metrics (bounding box of width/height).
 
-* Metrics provide the final shaped and formatted paragraph width and height.
+* Metrics provide the final shaped and formatted text width and height.
 
-Authors ensure paragraph will fit in
+Authors ensure rendered text will fit in
    the space provided by their data model. If not, they can adjust font-size, line-width,
    line-spacing, etc., on the input text objects and re-`format` until
    the desired goal is met.
@@ -39,7 +39,7 @@ render each line iteratively (such as for captions), or with custom spacing, etc
 
 Metrics provide:
 * Access to formatted line objects with width and height (including their offsets from the
-   paragraph container)
+   `FormattedText` container)
 * Pointers back to the input characters for the bounds positions of each line.
 
 ## 3. Use Case: specific glyph placement
@@ -75,7 +75,7 @@ Metrics provide:
    (Map from text metrics to data model.)
 * API for obtaining position objects given input data model runs/offsets. (Map from
    data model to text metrics.)
-* API for obtaining position objects given (x,y) offsets relative to the formatted paragraph.
+* API for obtaining position objects given (x,y) offsets relative to the `FormattedText`.
    (Map for mouse/touch/pen input to text metrics and data model.)
 * Access to formatted line objects with width/height (bounding box) and offsets from their
    container.
@@ -105,7 +105,7 @@ the image shows lines in a horizontal writing mode--but vertical writing modes a
 ![A FormattedText box contains four horizontal FormattedTextLine objects. Each line object contains one or more FormattedTextFragment objects. Each fragment object is a container for glyph information.](explainerresources/metrics-structure.png)
 
 These objects (that contain a snapshot of metrics and layout information) may be rendered independently.
-We suggest APIs to render the entire paragraph, a single line, or (needs validating) any sequence of
+We suggest APIs to render the entire text, a single line, or (needs validating) any sequence of
 glyphs from a fragment (see [Rendering section](explainer-rendering.md)).
 
 ## Metrics lifetime expectations
@@ -173,7 +173,7 @@ This is the top-level container returned by `format`. It provides:
 * Utility function for getting a position from a character and text run in the data model (position
    objects described below).
 * Utility function for getting a position from an x/y coordinate pair (where the x/y coordinates
-   should be relative to the paragraph's coordinate system.
+   should be relative to the `FormattedText` object's coordinate system.
 
 | APIs on `FormattedText` | Description |
 |---|---|
@@ -203,11 +203,11 @@ formatted text metrics. For example, fragments inside of lines would have coordi
 **relative** to the line's origin. Such an approach only tends to add complication for authors who
 will need to compute absolute offsets when working outside of the formatted text metrics (for example,
 in a canvas while responding to pointer events). For this reason, offset information at every step of
-the metrics API are **absolute** offsets from the origin of the formatted text paragraph (with one
+the metrics API are **absolute** offsets from the origin of the `FormattedText` (with one
 exception: glyph advances).
 
 Using abolute offsets for every object may need to be revisited when considering metrics reported only
-for paragraph sub-parts (e.g., in the Layout API where there may be no paragraph objects available).
+for lines, fragments (e.g., in the Layout API where there may be no `FormattedText` objects available).
 
 For glyphs, the most vital piece of information for determining the position of the following glyph (in
 either horizontal or vertical orientation) is the `**advance**`. The value of `advance` is always
@@ -218,7 +218,7 @@ relataive for each glyph, and has already incorporated kerning for adjacent glyp
 Inspired by the
 [TextPosition](https://github.com/google/skia/blob/main/site/docs/dev/design/text_shaper.md#access-the-results-of-shaping-and-formatting)
 design, a `FormattedTextPosition` object provides the mapping between the formatted snapshot of the data
-model (e.g., the paragraph, lines, fragments and glyphs) and the data model itself, which contains the
+model (e.g., the root, lines, fragments and glyphs) and the data model itself, which contains the
 source characters (Unicode code points) and their CSS-styled text runs. Positions always connect glyphs
 with characters and contain all necessary indexes to navigate the object structures to get between glyphs
 and characters. Like the rest of the formatted objects, positions are snapshots, and not updated as the
@@ -233,7 +233,7 @@ To find the relevant character(s) in the data model, positions have:
    (Unicode combining characters, ligatures, etc., which vary by Font).
 
 To find the relevant glyph in the metrics objects, positions have:
-* Line index (within the paragraph)
+* Line index (within the `FormattedText`)
 * Fragment index (within the line)
 * Glyph index (within the fragment)
 
@@ -260,7 +260,7 @@ parent `FormattedText` object.
 The line provides:
 
 * width/height (bounding box)
-* x/y offsets from the paragraph origin
+* x/y offsets from the `FormattedText` origin
 * array of `FormattedTextFragment` objects.
 * ⚠🚧TODO: add dominant baseline information?
 * Utility functions for getting the start position and end position of the characters that bookend
@@ -296,7 +296,7 @@ the FontMetrics' `fonts` (a list) wouldn't apply.
 
 A Fragment object provides:
 * width/height
-* x/y offsets (from the paragraph's coordinate origin)
+* x/y offsets (from the `FormattedText` object's coordinate origin)
 * Everything on HTML's
    [`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) interface
 * ⚠🚧 Formatting result values (for font, etc.). Note: we would like to understand the use cases
