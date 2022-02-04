@@ -82,9 +82,9 @@ Style input uses the same syntax as Element inline styles
 The following formatted text outputs will all be blue:
 
 ```js
-FormattedText.format( "hello world!", "color:blue" );
+FormattedText.format( "hello world!", "color: blue" );
 FormattedText.format( [ "hello", " world!" ], "color: blue" );
-FormattedText.format( [ { text: "hello" }, { text: " world!" } ], " color :blue" );
+FormattedText.format( [ { text: "hello" }, { text: " world!" } ], "color: blue" );
 ```
 
 Like text, style strings can be wrapped in a JavaScript object with property named `style` that 
@@ -92,8 +92,8 @@ has the style text string as its value. The following are equivalent:
 
 ```js
 // The following are equivalent expressions of style:
-FormattedText.format( "hello world!", "color:blue" );
-FormattedText.format( "hello world!", { style: "color:blue" } );
+FormattedText.format( "hello world!", "color: blue" );
+FormattedText.format( "hello world!", { style: "color: blue" } );
 ```
 
 ### Styling specific text runs
@@ -104,9 +104,9 @@ brown and bold and all the text will be italic:
 
 ```js
 FormattedText.format( [ "The quick ", 
-                        { text: "brown", style: "color:brown;font-weight:bold" },
+                        { text: "brown", style: "color: brown; font-weight: bold" },
                         " fox jumps over the lazy dog." 
-                      ], "font-style:italic" );
+                      ], "font-style: italic" );
 ```
 
 And in the following example, all the text will be blue _except_ for the word brown, which
@@ -114,9 +114,9 @@ will be colored brown:
 
 ```js
 FormattedText.format( [ "The quick ", 
-                        { text: "brown", style: "color:brown" }, 
+                        { text: "brown", style: "color: brown" }, 
                         " fox jumps over the lazy dog."
-                      ], { style: "color:blue" } );
+                      ], { style: "color: blue" } );
 ```
 
 A wide range of inline layout-related CSS is supported as style input to the `format` API.
@@ -159,7 +159,7 @@ are functionally equivalent, with the exception that the result of `format` has 
 
 ```js
 FormattedText.format( [ "The quick ",
-                        { text: "brown", style: "color:brown;font-weight:bold" },
+                        { text: "brown", style: "color: brown; font-weight: bold" },
                         " fox jumps over the lazy dog"
                       ], null, { width: 150 } );
 ```
@@ -219,8 +219,8 @@ leveraging the `writing-mode` property we can orient text in its traditional ver
 direction:
 
 ```js
-let bold = "font-weight:bold";
-let meta = "writing-mode:vertical-rl;font-size:36pt";
+let bold = "font-weight: bold";
+let meta = "writing-mode: vertical-rl; font-size: 36pt";
 FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, { height: 200 } );
 ```
 
@@ -276,12 +276,12 @@ The `FormattedTextStyle` object can be used in all the places in the data model 
 accept a style text string. For example the following are equivalent:
 
 ```js
-let bold = "font-weight:bold";
-let vertical = "writing-mode:vertical-rl";
+let bold = "font-weight: bold";
+let vertical = "writing-mode: vertical-rl";
 FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vertical );
 
-let reusableBold = new FormattedTextStyle( "font-weight:bold" );
-let reusableVertical = new FormattedTextStyle( "writing-mode:vertical-rl" );
+let reusableBold = new FormattedTextStyle( "font-weight: bold" );
+let reusableVertical = new FormattedTextStyle( "writing-mode: vertical-rl" );
 FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold ], reusableVertical );
 ```
 
@@ -374,7 +374,7 @@ Or it can be applied to the metadata object (generally the preferred option unle
 are multiple text runs of differing language):
 
 ```js
-FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "color:red" } );
+FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "color: red" } );
 ```
 
 ### Bidi Text
@@ -383,7 +383,7 @@ No additional work is needed from web developers to support bidi text. At `forma
 analysis is done on the input text which creates internal bidi runs if necessary. For example:
 
 ```js
-FormattedText.format( "Sample arabic بمدينة مَايِنْتْس، ألمانيا text.", "font:30px Arial", { width: 350 } );
+FormattedText.format( "Sample arabic بمدينة مَايِنْتْس، ألمانيا text.", "font: 30px Arial", { width: 350 } );
 ```
 
 Might produce the following rendered output:
