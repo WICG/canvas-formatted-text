@@ -395,23 +395,23 @@ Might produce the following rendered output:
 ```webidl
 [Exposed=Window,Worker] 
 interface FormattedText { 
-  static FormattedText format( ( DOMString or FormattedTextRunInit or sequence<( DOMString or FormattedTextRunInit )> ) text,
-                               optional ( DOMString or FormattedTextStyle or FormattedTextMetadataInit ) metadata,
+  static FormattedText format( ( DOMString or FormattedTextRun or sequence<( DOMString or FormattedTextRun )> ) text,
+                               optional ( DOMString or FormattedTextStyle or FormattedTextMetadata ) metadata,
                                optional FormattedTextConstraints constraints );
 };
 
 [Exposed=Window,Worker] 
 interface FormattedTextStyle {
-  constructor( DOMString styleText );
+  constructor( ( DOMString or StylePropertyMapReadOnly or CSSStyleDeclaration ) styleText );
   [SameObject] readonly attribute StylePropertyMapReadOnly styleMap;
 };
 
-dictionary FormattedTextMetadataInit { 
+dictionary FormattedTextMetadata { 
   ( DOMString or FormattedTextStyle) style;
   DOMString lang;
 }; 
 
-dictionary FormattedTextRunInit : FormattedTextMetadataInit { 
+dictionary FormattedTextRun : FormattedTextMetadata { 
   DOMString text = "";
 }; 
 
