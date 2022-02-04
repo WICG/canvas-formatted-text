@@ -453,10 +453,10 @@ For example, it does not include many of the new logical properites such as `inl
 | margin | ✔ | ✔ | no |  |
 | mask | ✔ | ✔ | no | mask-border-source will only supports `<gradient>` functions |
 | mask-border | ✔ | ✔ | no |  |
-| max-height | ✔ |  | no |  |
-| max-width | ✔ |  | no |  |
-| min-height | ✔ |  | no |  |
-| min-width | ✔ |  | no |  |
+| max-height | ❌ |  | no |  |
+| max-width | ❌ |  | no |  |
+| min-height | ❌ |  | no |  |
+| min-width | ❌ |  | no |  |
 | opacity | ✔ | ✔ | no |  |
 | outline | ✔ | ✔ | no |  |
 | overflow-wrap | ✔ | ✔ | yes |  |
