@@ -147,6 +147,8 @@ FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { wi
 
 `width` and `height` are `unsigned long` values. Omitted values are assumed to be infinite.
 
+**Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
+
 ## Comparison to HTML
 
 `format` is used to drive the web platform's layout engine, but using the JavaScript-based data
