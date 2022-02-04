@@ -1,12 +1,9 @@
 # Formatted Text - Metrics
 
-A representation of post-layout metrics for inline layout content, in particular the
-metrics from the formatted text data model.
+A representation of formatted text metrics for inline layout content, the result of the `format`
+function or [potentially] other APIs that extract formatted text metrics from other sources
+(e.g., DOM nodes, Layout Worklets).
 
-This explainer focuses on the metrics that are offered for inline text content, in particular
-the data model for formatted text. We aspire to create these metrics in a way that allows them
-to be supported for other sources of inline text content, in particular the DOM or a Worklet's
-Layout API algorithm.
 Additional scenarios include different web application rendering systems which can make use of
 the text shaping information to perform their own rendering logic. For example WebGL based apps
 with text content. The metrics would be used to determine how to correctly position glyphs in a
@@ -22,68 +19,47 @@ You can also learn more about the [formatted text data model](explainer-datamode
 
 # Use cases
 
-## Peparing text for rendering: from gross placement needs to fine-grained glyph control
-
-### Use case: paragraph placement
+## 1. Use case: paragraph placement
 
 This use case is the most basic use case we can imagine--identifying the placement of some
 Formatted Text into a view layer (like Canvas). Placement needs two things, a reference
 coordinate (x/y) and size metrics (bounding box of width/height).
 
-Author provides:
+* Metrics provide the final shaped and formatted paragraph width and height.
 
-* input `FormattedText` object (including styled runs, where styles may include runs with
-   differing font characteristics, line-spacing, justification rules, etc.)
-* line-wrap constraints (width constraint in horizontal languages)
-
-Metrics provide:
-
-* Final shaped and formatted paragraph width and height.
-
-A rendering API must provide:
-
-* (x, y) location to place the formatted paragraph. (Authors ensure paragraph will fit in
+Authors ensure paragraph will fit in
    the space provided by their data model. If not, they can adjust font-size, line-width,
-   line-spacing, etc., on the original `FormattedText` objects and re-request metrics until
+   line-spacing, etc., on the input text objects and re-`format` until
    the desired goal is met.
 
-### Use Case: line placement
+## 2. Use Case: line placement
 
 In this case, the author would like the platform to calculate line wrapping, but intends to
 render each line iteratively (such as for captions), or with custom spacing, etc.
-
-Author provides same information as above.
 
 Metrics provide:
 * Access to formatted line objects with width and height (including their offsets from the
    paragraph container)
 * Pointers back to the input characters for the bounds positions of each line.
 
-A rendering API must provide:
+## 3. Use Case: specific glyph placement
 
-* (x, y) location to place formatted line
-
-### Use Case: specific glyph placement
+**Note**: this use case may be dropped.
 
 ⚠🚧 We would like to validate this use case for Canvas 2D scenarios. For WebGL scenarios, we
 understand the key information needed for rendering is the given shaped font's glyph id and
 glyph advance information. Is a Canvas 2d rendering API needed? A sketch of how this might
 work follows.
 
-Author provides same information as in the previous use case.
-
 Metrics provide:
-
-* List of Shaped Glyph metrics per fragment (fragment is a unit of glyphs that all share the
+* List of shaped glyph metrics per fragment (fragment is a unit of glyphs that all share the
    same format/font/bidi/etc.).
 * Pointers back to the input characters for each glyph's bounds.
 
-A rendering API must provide:
+Authors would use the `FormattedTextFragment` (holder of glyph's shaped information),
+   and glyph info (index within that fragment or ID within the font) to render it.
 
-* (x, y) location to place a glyph, given a Fragment (holder of glyph's shaped information),
-   and glyph info (index within that fragment or ID within the font)
-
-## Editing scenarios for inline text
+## 4. Use Case: Editing: Rendering a selection over text (and placing/moving a caret)
 
 Many of the scenarios behind the chosen metrics are based on common editing use cases. An editing
 surface must provide a visual view and the means to move insertion points, selection ranges, etc.,
@@ -91,15 +67,7 @@ by responding to various input including pointing devices and keyboard. In order
 input modalities, the metrics supplied by the explainer chiefly provide the means of understanding
 the relationships between parts of text as it was laid out (the glyphs that make up segments of
 like-formatted runs called "fragments" in this proposal, lines, etc.) and the relatiionship between
-these metrics and their source `FormattedText` objects.
-
-### Rendering a selection over text (and placing/moving a caret)
-
-Author provides:
-
-* Input data model (same as previously described).
-* JS objects for tracking selection anchor and focus locations in the input data model (i.e.,
-   reference to a `FormattedTextRun` and character offset).
+these metrics and their source text objects.
 
 Metrics provide:
 
@@ -116,35 +84,21 @@ Metrics provide:
    inside of lines).
 * Access to glyph width/height (bounding box) and offset from the fragment container.
 
-A rendering API does not need to provide specific features (other than those noted in previous
-use cases) for this scenario. (e.g., rendering a selction and caret can be done with existing
-APIs).
 
 # Overview: data model to metrics to rendering
 
-The [data model](explainer-datamodel.md) itself cannot be rendered to a canvas as-is. We
-experimented with the idea of directly-rendering a `FormattedText` object, and found that in
-nearly every scenario the author needed to know both the expected width (i.e., inline-size) and
-the resultant height (i.e., block-size) in order to place the formatted content properly in the
-canvas.
+The `FormattedText` constructor's static method `format` (described in the 
+[data model](explainer-datamodel.md)) returns an instance of a `FormattedText` object, which
+internally holds all of the formatted text ready for rendering and is also the root object of
+the metrics describe in this explainer.
 
-As is the case with HTML text in normal flow, vertical positioning options for paragraphs of text
-are limited. CSS Flex and Grid now offer the desired alignment properties, however, it is not our
-goal to introduce these new CSS layout models to `FormattedText`. Instead, we will let authors
-calculate the placement of the formatted text themselves. To do this, the metrics API will provide
-both the inline and **block size** values.
+The `FormattedText` object contains properties to retrieve the inline size and block size 
+(among other things) after running all shaping, line breaking, and formatting of the text.
+This object **is a snapshot** of metrics given the constraints applied at the time of
+formatting, and is **not updated** as additional changes are made to the data model. In order
+to get new metrics, the `format` function must be run again.
 
-In order to get the data model's inline and block size, the `FormattedText` object must be… well,
-formatted.
-
-A new API is added to the `FormattedText` object: **format()**. This API takes a maximum inline size
-parameter and synchronously returns a **formatted paragraph object** containing the inline size and
-block size (among other things) after running all shaping, line breaking, and formatting of the text.
-This paragraph object **is a snapshot** of metrics for the `FormattedText` data model, given the
-constraints applied at the time of formatting, and is **not updated** as additional changes are made
-to the data model.
-
-The formatted paragraph is a container for all the input data model's metrics. It contains the APIs
+The `FormattedText` is a container for all the input data model's metrics. It contains the APIs
 to get additional line, fragment, and glyph information. The object hierarchy is shown below (note
 the image shows lines in a horizontal writing mode--but vertical writing modes are supported):
 
@@ -154,16 +108,12 @@ These objects (that contain a snapshot of metrics and layout information) may be
 We suggest APIs to render the entire paragraph, a single line, or (needs validating) any sequence of
 glyphs from a fragment (see [Rendering section](explainer-rendering.md)).
 
-| New APIs on `FormattedText` | Description |
-|---|---|
-| .`format`(`inlineSize`) | Synchronously formats the `FormattedText` object, returning an object suitable for rendering and extracting metrics: a `FormattedTextParagraph` |
-
 ## Metrics lifetime expectations
 
 ⚠🚧 We encourage prototyping to get feedback about the implementation opportunities or complexities
 of this suggested approach.
 
-It seems likely that developers will want to `format` their `FormattedText` frequently (for example,
+It seems likely that developers will want to `format` frequently (for example,
 as the model is changed to respond to user actions). Because metrics objects are snapshots, this
 could lead to an accumulation of many copies of metrics, only the most recent of such is relevant to
 the latest data model udpates at any given time. One approach, to avoid unnecessary pressure on the
@@ -192,10 +142,10 @@ The opportunity to get detailed metrics for formatted text is not exclusively ti
 where DOM is potentially unavailable or impractical to use. We would like to ensure that we design
 for the possibility of integration into both DOM and Layout API scenarios as well.
 
-We envision APIs similar to `format()`, that could also extract formatted text metrics. For DOM,
+We envision APIs similar to `format`, that could also extract formatted text metrics. For DOM,
 a given `Node` already has a layout (when attached to the tree) that includes a Layout box model,
 and so a similar `format` call would not require specifying an inline-size constraint. Instead,
-something like `measureFormattedText()` would operate at \[some scope] and return the formatted
+something like `measureFormattedText()` would return the formatted
 text metrics for that scope. A more scoped set of metrics could be returned by extending a similar
 existing API [`getClientRects()`](https://drafts.csswg.org/cssom-view/#dom-element-getclientrects)
 with line metric information.
@@ -213,9 +163,9 @@ and glyph information, potentially allowing advanced positioning of glyphs withi
 
 # Formatted text metrics objects
 
-## Paragraphs - `FormattedTextParagraph`
+## Root metrics container - `FormattedText`
 
-This is the top-level container returned by formatting a FormattedText object. It provides:
+This is the top-level container returned by `format`. It provides:
 
 * width/height.
 * array of Line objects.
@@ -225,7 +175,7 @@ This is the top-level container returned by formatting a FormattedText object. I
 * Utility function for getting a position from an x/y coordinate pair (where the x/y coordinates
    should be relative to the paragraph's coordinate system.
 
-| APIs on `FormattedTextParagraph` | Description |
+| APIs on `FormattedText` | Description |
 |---|---|
 | .`inlineSize` | Returns the bounding-box size in the inline direction or width for horizontal writing modes (double) |
 | .`blockSize` | Returns the bounding-box size in the block direction or height for horizontal writing modes (double) |
@@ -242,7 +192,7 @@ the coordiante origin should align with the expectations of that layout mode. Fo
 inline direction is top-to-bottom, starting at the right edge with block progression growing to the
 left, then the coordinate origin makes more sense in the upper-right of an object's bounding box. It
 is our intent then that when expressing coordinate positions, the origin is relative to the defined
-(or implied) writing mode used in the `FormattedText` object.
+(or implied) writing mode used during `format`.
 
 We acknowledge that the Canvas coordinate systems (e.g., 2d canvas and WebGL) are fixed, meaning that
 some writing modes, such as the `vertical-rl`, might need to perform a translation when rendering the
@@ -274,11 +224,11 @@ with characters and contain all necessary indexes to navigate the object structu
 and characters. Like the rest of the formatted objects, positions are snapshots, and not updated as the
 model changes. (So don't change the model until you're done using a `FormattedTextPosition`!)
 
-![A FormattedTextPosition bridges between the data model (with its array of `FormattedTextRun`s containing characters) and the paragraph, line, fragment and glyph metrics objects. The position has text run references and character offsets to identify a precise location in the data model, and index values for the line, fragment, and glyph referenced by the associated character.](explainerresources/text-position-relationship.png)
+![A FormattedTextPosition bridges between the data model (with its potential array of text objects) and the root, line, fragment and glyph metrics objects. The position has text run references and character offsets to identify a precise location in the data model, and index values for the line, fragment, and glyph referenced by the associated character.](explainerresources/text-position-relationship.png)
 
 To find the relevant character(s) in the data model, positions have:
 
-* `FormattedTextRun` object reference (one-way reference)
+* Text index which text object is being referenced (index of zero when only one text object was specified in `format`)
 * Character offset (start and end) since some glyphs are formed from a sequence of characters
    (Unicode combining characters, ligatures, etc., which vary by Font).
 
@@ -292,7 +242,7 @@ These are covered below in the fragments section.
 
 | APIs on `FormattedTextPosition` | Description |
 |---|---|
-| .`source` | A reference to the `FormattedTextRun` that contains the relevant character(s). The term `source` is generic in order to potentially support `Text` nodes as well in the future. |
+| .`sourceIndex` | An index of the input text object or string that contains the relevant character(s). The term `source` is generic in order to potentially support `Text` nodes as well in the future. **Note**: will need to resolve what the index means for DOM trees with hierarchies. |
 | .`characterOffsetStart` | The offset (unsigned long) within `source` that the associated glyph derives from (the start of the range if more than one character). |
 | .`characterOffsetEnd` | See above. If only one character maps to a single glyph, the start and end offsets will be the same. |
 | .`lineIndex` | The index into the `FormattedTextParagraph`'s `lines` array where the associated glyph can be found. |
@@ -305,7 +255,7 @@ The line is the bounding box of all the formatted fragments contained within the
 formatting itself). All fragments contained within the line are wholly contained within (no fragments
 exist simultaneously in multiple lines). Note: due to justification or other inline alignment properties
 of the line, the line sizes and offsets may vary. The line's offsets are relative to the origin of its
-parent `FormattedTextParagraph` object.
+parent `FormattedText` object.
 
 The line provides:
 
@@ -318,10 +268,10 @@ The line provides:
 
 | APIs on `FormattedTextLine` | Description |
 |---|---|
-| .`inlineSize` | Same as `FormattedTextParagraph` definition. |
-| .`blockSize` | Same as `FormattedTextParagraph` definition. |
-| .`inlineOffset` | Returns the inline-direction offset from the `FormattedTextParagraph` origin or x-coordinate for horizontal writing modes (double) |
-| .`blockOffset` | Returns the block-direction offset from the `FormattedTextParagraph` origin or y-coordinate for horizontal writing modes (double) |
+| .`inlineSize` | Same as `FormattedText` definition. |
+| .`blockSize` | Same as `FormattedText` definition. |
+| .`inlineOffset` | Returns the inline-direction offset from the `FormattedText` origin or x-coordinate for horizontal writing modes (double) |
+| .`blockOffset` | Returns the block-direction offset from the `FormattedText` origin or y-coordinate for horizontal writing modes (double) |
 | .`textFragments`[] | An array of `FormattedTextFragment` objects. |
 | .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the line (left side for horizontal LTR). |
 | .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the line (right side for horizontal LTR). |
@@ -359,8 +309,8 @@ A Fragment object provides:
 
 | APIs on `FormattedTextFragment` | Description |
 |---|---|
-| .`inlineSize` | Same as `FormattedTextParagraph` definition. |
-| .`blockSize` | Same as `FormattedTextParagraph` definition. |
+| .`inlineSize` | Same as `FormattedText` definition. |
+| .`blockSize` | Same as `FormattedText` definition. |
 | .`inlineOffset` | Same as `FormattedTextLine` definition. |
 | .`blockOffset` | Same as `FormattedTextLine` definition. |
 | .`glyphs`[] | An array of dictionary objects containing glyph info (see next section). |
@@ -418,5 +368,9 @@ Developer feedback on whether native metrics should be support for word-breaks i
 motivate additional work.
 
 ## Contributors:
+(in alphabetical order)
+
+ [dlibby-](https://github.com/dlibby-),
+ [ijprest](https://github.com/ijprest),
  [sushraja-msft](https://github.com/sushraja-msft),
  [travisleithead](https://github.com/travisleithead)
