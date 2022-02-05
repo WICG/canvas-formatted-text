@@ -1,10 +1,13 @@
 Welcome!
 =============
-This is the home for the **Formatted Text** incubation effort. The explainer for
-this feature has recently been split into three documents for ease of reading and 
-reviewing: [data model](explainer-datamodel.md), [rendering](explainer-rendering.md),
-and [text metrics](explainer-metrics.md). Below is a general introduction to the problem
-space and the motivation for this effort.
+This is the home for the **Formatted Text** incubation effort. There are several explainers
+for this feature:
+
+1. This readme is a general introduction to the problem space and the motivation for this
+     effort.
+2. Input data model for the API is described in [data model](explainer-datamodel.md).
+3. Output data model or [text metrics](explainer-metrics.md).
+4. [Rendering](explainer-rendering.md) of the output data model.
 
 ## Introduction & Challenges
 
@@ -114,15 +117,8 @@ get lots of feedback.
    * [Text API Overview](https://github.com/google/skia/blob/main/site/docs/dev/design/text_overview.md)
    * [Canvas2D extensions for Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_c2d.md)
    * [Shaped Text](https://github.com/google/skia/blob/main/site/docs/dev/design/text_shaper.md)
-
-## Explainers
-
-We will be pursing consensus on each of the three aspects of the formatted text 
-problem space, starting with the data model and then detailing how it can be rendered
-and how its text metrics can be extracted:
-* [Formatted Text Data Model](explainer-datamodel.md)
-* [Formatted Text Rendering](explainer-rendering.md)
-* [Formatted Text Metrics](explainer-metrics.md)
+* ECMA 402 [proposal to expose "line break opportunities"](https://github.com/tc39-transfer/proposal-intl-segmenter-v2) of text which implement the
+    [Unicode® Standard Annex #14 UNICODE LINE BREAKING ALGORITHM](https://www.unicode.org/reports/tr14/)
 
 ## Implementations
 
@@ -133,6 +129,27 @@ and how its text metrics can be extracted:
 Please review and comment on our [existing open issues](https://github.com/WICG/canvas-formatted-text/issues).
 
 ## Alternatives Considered
+
+### Fixed Data Model Objects
+A previous iteration of this proposal used WebIDL interfaces as containers for a
+group of text (`FormattedText` objects), which contained an array of text run objects
+(`FormattedTextRun`) with properties for style, etc. 
+
+The prior reason for having an express data model was to enable persistent text
+(e.g., similar to DOM's `Text` nodes) to be used for memory-resident updates. However,
+experience with DOM `Text` nodes helps us understand that in most cases, the `Text` 
+node object itself is irrelevant. Instead, what is needed is the JavaScript string
+from the `Text` node in order to mutate, aggregate, and change the text. In the DOM,
+such string changes need to be presented via document layout (e.g., "update the 
+rendering"), and the only way to do that is to re-add changed strings into DOM `Text`
+nodes in an attached document. For Canvas-based scenarios, rendering is not done 
+through document layout, but with explicit drawing commands (which then paint when 
+rendering is udpated). Therefore having a DOM `Text` node-like data model really did 
+not add much value.
+
+Furthermore, simplifying the data model was advantageous for performance-critical 
+scenarios that inlcude the creation time of the data model, in addition to layout and
+rendering optimizations.
 
 ### Intermediate line objects
 In a previous iteration of this proposal, we called for a "simple" and "advanced"
@@ -157,6 +174,10 @@ didn't want to create a feature with this foot-gun. The advanced use case was pr
 about enabling occusions and supporting things like floaters obstructing lines, and CSS
 already has standards for those scenarios--when we decided to embrace more CSS constructs
 for this feature, it was decided that the advanced use case could be dropped entirely.
+
+**Note:** many of the advanced features possible with this iteration of the proposal 
+require new CSS features that are only recently starting to be interoperably implemented
+(E.g., CSS Shapes).
 
 ### Imperative model
 The proposal here addresses two separate problems. One of styling ranges of text
@@ -190,6 +211,9 @@ We are currently evaluating whether this API would increase fingerprinting surfa
 area and will update this section with our findings. We welcome any community feedback.
 
 ## Contributors:
+(In alphabetical order)
 
+ [dlibby-](https://github.com/dlibby-),
+ [ijprest](https://github.com/ijprest),
  [sushraja-msft](https://github.com/sushraja-msft),
- [travisleithead](https://github.com/travisleithead)
+ [travisleithead](https://github.com/travisleithead),

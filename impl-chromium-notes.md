@@ -1,17 +1,12 @@
-# 🚧 Variations from the explainer in the Chromium experimental implementation 🚧
+# 🚧 Implementation Report 🚧
 
-## API Shape
+## Chromium experimental implementation
 
-1. The explainer anticipates using an `ObservableArray` type for managing the list of text runs in the [data model](explainer-datamodel.md). Until ObserverableArray is implemented, the list of text runs differs in the following ways:
-    * `textruns` attribute is not supported
-    * `FormattedText`.`appendRun()` is how text runs are added
-    * `FormattedText`.`deleteRun()` is how text runs are deleted
-    * `FormattedText` has an operable indexed getter (but no setter)
-2. The implementation uses an older constructor name `CanvasFormattedText` instead of `Formattedtext`
-3. Specified overloads for the constructors are not supported (e.g., `new FormattedText( "run1", "run2" )`, `new FormattedText({text:"run1",style:"color:red"})`, etc.)
-4. `setStyle()` is not supported.
+Implementation is being updated to reflect recent updates made to the data model explainer.
 
-## Supported CSS values
+No implementation of the metrics objects.
+
+### Supported CSS values
 
 Summary of CSS subset in blink/renderer/core/css/css_properties.json5, starting from [commit 2788582](https://chromium-review.googlesource.com/c/chromium/src/+/2788582/14/third_party/blink/renderer/core/css/css_properties.json5)
 
