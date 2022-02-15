@@ -116,30 +116,6 @@ the image shows lines in a horizontal writing mode--but vertical writing modes a
 The `FormattedText` and `FormattedTextLine` objects may be rendered independently. We propose APIs
 to render them in the [Rendering explainer](explainer-rendering.md).
 
-## Metrics lifetime expectations
-
-⚠🚧 We encourage prototyping to get feedback about the implementation opportunities or complexities
-of this suggested approach.
-
-It seems likely that developers will want to `format` frequently (for example,
-as the model is changed to respond to user actions). Because metrics objects are snapshots, this
-could lead to an accumulation of many copies of metrics, only the most recent of such is relevant to
-the latest data model udpates at any given time. One approach, to avoid unnecessary pressure on the
-garbage collector, is to return the same instance of one or all of the metrics objects each time
-`format` is called. If a portion of the metrics have changed, then the objects related to those
-metrics would be new instances, while the other unchanged metrics would be same-instance identical.
-
-A downside to this approach is that authors wouldn't necessarily be able to depend on getting back
-the same object identity all the time. For example, JavaScript properties added to a line object might
-"stick" on that object only as long as the same instance is returned from the API. Once a "new" object
-is returned, the author's extra JavaScript properties will be missing.
-
-Our recommendation is a hybrid approach. New objects shall be created every time `format` is called.
-This allows us to provide clear author expectations. However, to allow implementations to optimize,
-only **one copy** of the metrics objects (the one most recently returned from `format`) will be
-"operable" at any one time. Prior copies of metrics objects will be internally disabled such that API
-calls on them will throw exceptions.
-
 ## Thinking ahead: future integration into DOM or Houdini Layout API
 
 ⚠🚧 WARNING: This section is entirely speculative, and out of scope for now. We include it here
