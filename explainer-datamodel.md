@@ -367,14 +367,14 @@ whose value will accept the set of supported values of the equivalent HTML `lang
 An example where the `lang` property is used to provide clarify on the text object directly:
 
 ```js
-FormattedText.format( { text: "不怕慢就怕站", lang: "zh-CN" } ); 
+FormattedText.format( { text: "不怕慢就怕站", lang: "zh-Hans" } ); 
 ```
 
 Or it can be applied to the metadata object (generally the preferred option unless there
 are multiple text runs of differing language):
 
 ```js
-FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-CH", style: "color: red" } );
+FormattedText.format( [ "不怕慢", "就怕站" ], { lang: "zh-Hans", style: "color: red" } );
 ```
 
 ### Bidi Text
