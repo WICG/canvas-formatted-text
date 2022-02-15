@@ -157,7 +157,7 @@ independently within a complex layout.
 
 In order to provide per-line constraints, the input text must still be provided to `format`, as
 previously described, in order to obtain a `FormattedText` instance (the text metrics object).
-A `FormattedText` instance provides a `reflowFrom` API in order to re-contrain a specified line
+A `FormattedText` instance provides a `reflowFrom` API in order to re-constrain a specified line
 and all following lines to new dimensions. This can be repeated iteratively as desired until all 
 lines have been processed.
 
