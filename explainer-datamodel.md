@@ -149,6 +149,18 @@ FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { wi
 
 **Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
 
+### Per-line constraints
+
+As described in more detail in the [metrics explainer](explainer-metrics.md), it is also possible
+to specify per-line constraints: for example, if each line should be sized for positioning 
+independently within a complex layout.
+
+In order to provide per-line constraints, the input text must still be provided to `format`, as
+previously described, in order to obtain a `FormattedText` instance (the text metrics object).
+A `FormattedText` instance provides a `reflowFrom` API in order to re-contrain a specified line
+and all following lines to new dimensions. This can be repeated iteratively as desired until all 
+lines have been processed.
+
 ## Comparison to HTML
 
 `format` is used to drive the web platform's layout engine, but using the JavaScript-based data
