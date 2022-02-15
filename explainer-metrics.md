@@ -131,7 +131,7 @@ Elements. In the DOM, a given `Node` already has a layout (when attached to the 
 a Layout box model and is already constrained by the viewport and the hierarchy of nested layouts in
 which it resides. A new API something like `getFormattedText()` would return the formatted
 text metrics for an Element (acting like the `innerText` or `textContent` getters, but with context
-of the line formatting, relative placement of the lines and other metrics. Another approach might be
+of the line formatting, relative placement of the lines and other metrics). Another approach might be
 extending a related API such as [`getClientRects()`](https://drafts.csswg.org/cssom-view/#dom-element-getclientrects)
 with line metric information.
 
