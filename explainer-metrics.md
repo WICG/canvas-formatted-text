@@ -1,6 +1,6 @@
 # Formatted Text - Metrics
 
-A representation of formatted text metrics for inline layout content, the result of the `format`
+A representation of formatted text metrics for inline layout content: the result of the `format`
 function or [potentially] other APIs that extract formatted text metrics from other sources
 (e.g., DOM nodes, Layout Worklets).
 
@@ -32,12 +32,15 @@ Authors ensure rendered text will fit in
    line-spacing, etc., on the input text objects and re-`format` until
    the desired goal is met.
 
-## 2. Use Case: line placement
+## 2. Use Case: line placement and custom per-line lengths
 
-In this case, the author would like the platform to calculate line wrapping, but intends to
-render each line iteratively (such as for captions), or with custom spacing, etc.
+In this case, the author would like to specify per-line constraints and intends to render
+each line iteratively (such as for captions), or with custom spacing such as to fit into a
+unique layout or flow (or handle inline gaps such as for figures that flow with the text.
 
 Metrics provide:
+* `reflowFrom` API to specify the line and constraints which should be applied to that line
+    and all following lines. (Lines prior to the line number specified are not re-constrained.)
 * Access to formatted line objects with width and height (including their offsets from the
    `FormattedText` container)
 * Pointers back to the input characters for the bounds positions of each line.
@@ -92,21 +95,26 @@ The `FormattedText` constructor's static method `format` (described in the
 internally holds all of the formatted text ready for rendering and is also the root object of
 the metrics describe in this explainer.
 
-The `FormattedText` object contains properties to retrieve the inline size and block size 
-(among other things) after running all shaping, line breaking, and formatting of the text.
-This object **is a snapshot** of metrics given the constraints applied at the time of
-formatting, and is **not updated** as additional changes are made to the data model. In order
-to get new metrics, the `format` function must be run again.
+The `FormattedText` object retains the formatted structure of the input text, and offers APIs to
+query the total bounding box of the text as constrained at any given moment; APIs to adjust the 
+constraints for a given line and its descendents resulting in text that wraps at different 
+specified lengths, and other APIs for serving common use cases for which an understanding of the
+formatted text and its relationship to the input text is important (e.g., editing cases).
+
+This object **is updated** as contraints on the lines are changed. Updates and changes may include
+number of lines of text (line break locations), per-line sizes, bounding box values, and related
+mapping back to input text for subsequent fragments. Updates will **not** include changes to the 
+underlying text or style. In order to mutate the text, `format` must be called again with 
+different input (which will return a new object; a different instance of a `FormattedText` object).
 
 The `FormattedText` is a container for all the input data model's metrics. It contains the APIs
-to get additional line, fragment, and glyph information. The object hierarchy is shown below (note
+to get additional lines, fragments, and glyph information. The object hierarchy is shown below (note
 the image shows lines in a horizontal writing mode--but vertical writing modes are supported):
 
 ![A FormattedText box contains four horizontal FormattedTextLine objects. Each line object contains one or more FormattedTextFragment objects. Each fragment object is a container for glyph information.](explainerresources/metrics-structure.png)
 
-These objects (that contain a snapshot of metrics and layout information) may be rendered independently.
-We suggest APIs to render the entire text, a single line, or (needs validating) any sequence of
-glyphs from a fragment (see [Rendering section](explainer-rendering.md)).
+The `FormattedText` and `FormattedTextLine` objects may be rendered independently. We propose APIs
+to render them in the [Rendering explainer](explainer-rendering.md).
 
 ## Metrics lifetime expectations
 
