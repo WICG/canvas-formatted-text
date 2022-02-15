@@ -147,27 +147,86 @@ and glyph information, potentially allowing advanced positioning of glyphs withi
 | `extDOMRect`.`textFragments`[`i`] | Alternative DOM integration point that extends `getClientRects()` such that each rectangle gets the `FormattedTextLine` mixin or some such. |
 | `extLayoutFrag`.`textFragments`[`i`] | Array of `FormattedTextFragments` (see equivalent functionality in a `FormattedTextLine` object). |
 
-# Formatted text metrics objects
+# Description of objects
 
 ## Root metrics container - `FormattedText`
 
 This is the top-level container returned by `format`. It provides:
 
-* width/height.
-* array of Line objects.
+* width/height (total bounding box for all lines).
+* array of `FormattedTextLine` objects.
 * a coordinate system for its lines (see section below).
-* Utility function for getting a position from a character and text run in the data model (position
-   objects described below).
-* Utility function for getting a position from an x/y coordinate pair (where the x/y coordinates
-   should be relative to the `FormattedText` object's coordinate system.
+* Input-to-output mapping APIs
+    * Getting a position for a given character/text run of the input text (position
+       objects described below).
+* Pointer-to-output mapping APIs (hit testing)
+    * Getting a position from an x/y coordinate pair (where the x/y coordinates
+       are relative to the `FormattedText` object's coordinate system.
+* Reformatting APIs
+    * Adjusting the current "flow" of the text by providing updated width/height
+       constraints for a given line and its following lines.
 
 | APIs on `FormattedText` | Description |
 |---|---|
-| .`inlineSize` | Returns the bounding-box size in the inline direction or width for horizontal writing modes (double) |
-| .`blockSize` | Returns the bounding-box size in the block direction or height for horizontal writing modes (double) |
-| .`lines`[] | An array of `FormattedTextLine` objects |
-| .`getPosition`(`textrun`, `offset`) | Given the "source object" (intentionally generic: could be extended to support `Text` in the future), and an offset, returns a `FormattedTextPosition` of the associated glyph (if any). If no glyph for that character, returns `null`. |
+| .`width` | Returns the bounding-box width for all lines (adjusted as lines are re-constrained). For vertical writing modes, the value may exceed the provided width constraint if additional lines wrap beyond the provided width (the block direction for vertical writing modes). |
+| .`height` | Returns the bounding-box height for all lines (adjusted as lines are re-constrained). For horizontal writing modes, the value may exceed the provided height constraint if additional lines wrap beyond the provided height (the block direction for horizontal writing modes). |
+| .`lines`[] | An array of `FormattedTextLine` objects representing distinct lines of text in the inline flow.<sup>*</sup> |
+| .`getPosition`(`textIndex`, `charIndex`) | Given a reference to an in input character (and the text object offset; 0 if only one string of text provided), returns a `FormattedTextPosition` of the associated place in the output metrics. |
 | .`getPositionFromPoint`(`x`,`y`,`findNearest`) | For mapping pointer positions into glyphs. `findNearest` might ensure that a `FormattedTextPosition` is always returned regardless of the coordinate value, whereas otherwise, `null` might be returned if not strictly over a glyph. |
+| .`reflowFrom`(`lineIndex`, `contraints`) | Reclaculates line breaking given the existing text and formats against new constraints for the provided line and its following lines only (does not impact line indexes less than the provided line index. |
+
+<sup>*In most cases, e.g., all cases where `FormattedText` instances are returned from the
+`format` command, each `FormattedTextLine` object in the array will correspond to a separate visual
+line for rendering. However, in cases where a `FormattedText` instance is created from a DOM node,
+it is possible that multiple `FormattedTextLine` objects may be visually located on the same line
+when they are broken by non-inline content (such as figures, tables, etc., that are of 
+`display: inline-block` layout). In this latter case, the positions and offsets of each 
+`FormattedTextLine` will identify these situations.</sup>
+
+### Examples
+
+#### 1. Custom line layout (line at a time)
+
+In this example, the `FormattedText` metric's `reflowFrom` API is used to custom-wrap lines around 
+an image.
+
+```js
+// Caller provides text to format, a font, width/height constraints,
+//  a box location/dimensions, and a rendering function callback 
+//  that accepts a `FormattedTextLine`
+function wrapAroundFloatLeftBox( text, font, constraints, box = { width: 200, height: 200, marginRightBottom: 10 }, renderFunc ) {
+  // Format the input text
+  let formattedText = FormattedText.format( text, font );
+  // Get the line height (all text will be on one line)
+  // formattedText.height is the bounding box height of
+  // the single line of text (its value will update as
+  // the line is reflowed)
+  let lineHeight = formattedText.height; // same as formattedText.lines[0].height (for now)
+  let y = 0; // For custom line placement
+  let lineIndex = 0; // For iterating the lines
+  
+  do {
+    // Determine x position for line custom line placement.
+    if ( y <= ( box.marginRightBottom + box.height ) ) {
+      x = box.marginRightBottom + box.width;
+    }
+    else {
+      x = 0;
+    }
+    // Constrain the line to the available width...
+    formattedText.reflowFrom( lineIndex, { width: constraints.width - x } );
+    
+    // Render that line...
+    renderFunc( formattedText.lines[ lineIndex ], x, y );
+    
+    y += lineHeight;
+    lineIndex++; // Move to the next line...
+    
+  } while ( formattedText.lines[ lineIndex ] ); // Exits when all lines are processed
+}
+```
+
+![Image of a cat in the upper-left corner of a text box, with text flowing to the image's right side and continuing below it.](explainerresources/Available-Width.png)
 
 ### Thoughts on coordinate systems
 
