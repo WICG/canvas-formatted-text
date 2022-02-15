@@ -126,22 +126,24 @@ The opportunity to get detailed metrics for formatted text is not exclusively ti
 where DOM is potentially unavailable or impractical to use. We would like to ensure that we design
 for the possibility of integration into both DOM and Layout API scenarios as well.
 
-We envision APIs similar to `format`, that could also extract formatted text metrics. For DOM,
-a given `Node` already has a layout (when attached to the tree) that includes a Layout box model,
-and so a similar `format` call would not require specifying an inline-size constraint. Instead,
-something like `measureFormattedText()` would return the formatted
-text metrics for that scope. A more scoped set of metrics could be returned by extending a similar
-existing API [`getClientRects()`](https://drafts.csswg.org/cssom-view/#dom-element-getclientrects)
+We envision APIs similar to `format`, that could also extract formatted text metrics but for 
+Elements. In the DOM, a given `Node` already has a layout (when attached to the tree) that includes
+a Layout box model and is already constrained by the viewport and the hierarchy of nested layouts in
+which it resides. A new API something like `getFormattedText()` would return the formatted
+text metrics for an Element (acting like the `innerText` or `textContent` getters, but with context
+of the line formatting, relative placement of the lines and other metrics. Another approach might be
+extending a related API such as [`getClientRects()`](https://drafts.csswg.org/cssom-view/#dom-element-getclientrects)
 with line metric information.
 
-In the Layout API, while processing a `layout`, `LayoutFragment` objects can represent a line of text.
+In the [Houdini Layout API](https://drafts.css-houdini.org/css-layout-api-1/), while processing a 
+`layout`, `LayoutFragment` objects can represent a line of text (or a fragment from a line).
 In these situations, it might make sense to extend the `LayoutFragment` by combining it with a
 `FormattedTextLine` metrics object. This would provide extra information about the intra-line fragments
 and glyph information, potentially allowing advanced positioning of glyphs within a line-layout pass.
 
 | ⚠🚧 Ideas for integration into other parts of the platform | Description |
 |---|---|
-| myElement.`measureFormattedText`() | Similar to `format`. TBD on scope of how this would work 😊 |
+| myElement.`getFormattedText`() | Similar to `format`. TBD on scope of how this would work 😊 |
 | `extDOMRect`.`textFragments`[`i`] | Alternative DOM integration point that extends `getClientRects()` such that each rectangle gets the `FormattedTextLine` mixin or some such. |
 | `extLayoutFrag`.`textFragments`[`i`] | Array of `FormattedTextFragments` (see equivalent functionality in a `FormattedTextLine` object). |
 
