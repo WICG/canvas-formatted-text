@@ -310,8 +310,8 @@ parent `FormattedText` object.
 
 The line provides:
 
-* coordinate positions: x,y,inlineOffset,blockOffset
-* bounding boxes: width,height,inlineSize,blockSize
+* coordinate positions: x, y, inlineOffset, blockOffset
+* bounding boxes: width, height, inlineSize, blockSize
 * array of `FormattedTextFragment` objects.
 * ⚠🚧TODO: add dominant baseline information?
 * Utility functions for getting the start position and end position of the characters that bookend
@@ -350,8 +350,8 @@ though in this context the fragment is guaranteed to have consistent font metric
 the FontMetrics' `fonts` (a list) wouldn't apply.
 
 A Fragment object provides:
-* coordinate positions: x,y,inlineOffset,blockOffset
-* bounding boxes: width,height,inlineSize,blockSize
+* coordinate positions: x, y, inlineOffset, blockOffset
+* bounding boxes: width, height, inlineSize, blockSize
 * Everything on HTML's
    [`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) interface
 * ⚠🚧 Formatting result values (for font, etc.). Note: we would like to understand the use cases
