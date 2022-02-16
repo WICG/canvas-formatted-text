@@ -173,7 +173,7 @@ This is the top-level container returned by `format`. It provides:
 | .`lines`[] | An array of `FormattedTextLine` objects representing distinct lines of text in the inline flow.<sup>*</sup> |
 | .`getPosition`(`textIndex`, `charIndex`) | Given a reference to an in input character (and the text object offset; 0 if only one string of text provided), returns a `FormattedTextPosition` of the associated place in the output metrics. |
 | .`getPositionFromPoint`(`x`,`y`,`findNearest`) | For mapping pointer positions into glyphs. `findNearest` might ensure that a `FormattedTextPosition` is always returned regardless of the coordinate value, whereas otherwise, `null` might be returned if not strictly over a glyph. |
-| .`reflowFrom`(`lineIndex`, `contraints`) | Reclaculates line breaking given the existing text and formats against new constraints for the provided line and its following lines only (does not impact line indexes less than the provided line index. |
+| .`reflowFrom`(`lineIndex`, `contraints`) | Reclaculates line breaking given the existing text and formats against new constraints for the provided line and its following lines only (does not impact line indexes less than the provided line index). |
 
 <sup>*In most cases, e.g., all cases where `FormattedText` instances are returned from the
 `format` command, each `FormattedTextLine` object in the array will correspond to a separate visual
@@ -234,35 +234,35 @@ Note: in the above example code, `reflowFrom` formats the current `lineIndex` *a
 lines* to `constraints.width - x`. Thus, in this specific example, it is unnecessary to call 
 `reflowFrom` on each iteration of the loop when the computed `constraints.width - x` does not change.
 
-### Thoughts on coordinate systems
+### Coordinate systems
 
-This API is designed with multiple writing modes (i.e., horizontal and vertical text) in mind. To
-an author used to `ltr` direction and `horizontal-tb` block progression, having coordinates originate
-in the upper-left of some object's bounding box makes sense. We assert that in other writing modes
-the coordiante origin should align with the expectations of that layout mode. For example, if the
-inline direction is top-to-bottom, starting at the right edge with block progression growing to the
-left, then the coordinate origin makes more sense in the upper-right of an object's bounding box. It
-is our intent then that when expressing coordinate positions, the origin is relative to the defined
-(or implied) writing mode used during `format`.
+Some APIs on the `FormattedText` object depend on coordinate systems for hit-testing, such as the
+`getPositionFromPoint` API, which takes an x/y pair. To simplify the logic for developers when
+translating between input pointer coordinates in viewport space and the coordinate space used by 
+`FormattedText` objects, each `FormattedText` object has a *pointer origin* or *pointer coordinate
+space* with its origin in the typical upper-left corner of the bounding box rectangle that contains
+all the lines of text. For pointer tracking, all `x`/`y`/`width`/`height` values for the 
+`FormattedTextLine`, etc. objects are absolute values relative to the origin of 
+the pointer-origin coordinate space.
 
-We acknowledge that the Canvas coordinate systems (e.g., 2d canvas and WebGL) are fixed, meaning that
-some writing modes, such as the `vertical-rl`, might need to perform a translation when rendering the
-formatted text objects into a canvas.
+The pointer-origin coordinate space is not the most developer friendly for computing line offsets 
+and positions in other writing modes. For that reason, `FormattedTextLine`, `FormattedTextFragment`,
+etc., objects also have a *writing mode origin* or *writing mode coordinate space* which is the 
+origin of the block and inline progression directions for the chosen writing mode.
+`inlineSize`/`blockSize`/`inlineOffset`/`blockOffset` values are each relative to the writing mode
+origin for the set of lines formatted using that writing mode.
 
-We also considered **relative coordinate systems** for each "layer" of the nested objects in the
-formatted text metrics. For example, fragments inside of lines would have coordinate offsets that were
-**relative** to the line's origin. Such an approach only tends to add complication for authors who
-will need to compute absolute offsets when working outside of the formatted text metrics (for example,
-in a canvas while responding to pointer events). For this reason, offset information at every step of
-the metrics API are **absolute** offsets from the origin of the `FormattedText` (with one
-exception: glyph advances).
+For example, in a series of lines formatted with `writing-mode: vertical-rl` and `direction: ltr`, the
+first line is on the right side of the pointer coordiante space, vertically oriented. The first 
+line's origin in pointer coordinate space is the upper-left corner of the line's bounding box at
+position (`x`, `y`). The first line's origin in writing mode coordinate space is the upper-right
+corner of the line's bounding box, and being the first line, its (`inlineOffset`,`blockOffset`) is 
+(0, 0). The line's `blockSize` (i.e., line height) corresponds with the `width` value in the 
+pointer coordinate space, while its `inlineSize` (i.e., line length) corresponds with the `height` 
+value in pointer coordinate space.
 
-Using abolute offsets for every object may need to be revisited when considering metrics reported only
-for lines, fragments (e.g., in the Layout API where there may be no `FormattedText` objects available).
+![illustration of the various offset and size values for vertical text](explainerresources/coordinates.png)
 
-For glyphs, the most vital piece of information for determining the position of the following glyph (in
-either horizontal or vertical orientation) is the `**advance**`. The value of `advance` is always
-relataive for each glyph, and has already incorporated kerning for adjacent glyphs.
 
 ## Positions – `FormattedTextPosition`
 
@@ -310,8 +310,8 @@ parent `FormattedText` object.
 
 The line provides:
 
-* width/height (bounding box)
-* x/y offsets from the `FormattedText` origin
+* coordinate positions: x,y,inlineOffset,blockOffset
+* bounding boxes: width,height,inlineSize,blockSize
 * array of `FormattedTextFragment` objects.
 * ⚠🚧TODO: add dominant baseline information?
 * Utility functions for getting the start position and end position of the characters that bookend
@@ -319,10 +319,14 @@ The line provides:
 
 | APIs on `FormattedTextLine` | Description |
 |---|---|
-| .`inlineSize` | Same as `FormattedText` definition. |
-| .`blockSize` | Same as `FormattedText` definition. |
-| .`inlineOffset` | Returns the inline-direction offset from the `FormattedText` origin or x-coordinate for horizontal writing modes (double) |
-| .`blockOffset` | Returns the block-direction offset from the `FormattedText` origin or y-coordinate for horizontal writing modes (double) |
+| .`width` | The line's width in pointer coordinate space (upper-left corner of the `FormattedText` object's bounding box containing all lines). This value may represent the line's width or height depending on the `writing-mode` and `direction` used to format the line. |
+| .`height` | The line's height in pointer coordinate space. This value may represent the line's width or height depending on the `writing-mode` and `direction` used to format the line. |
+| .`x` | The line's x-offset in pointer coordinate space. |
+| .`y` | The line's y-offset in pointer coordinate space. |
+| .`inlineSize` | The line's length in the inline direction (i.e., the direction of adjacent characters in the line of text). This value will always be the line's "width" regardless of  `writing-mode` and `direction`. |
+| .`blockSize` | The line's height in the block direction (opposite of inline direction). This value will always be the line's "height" regardless of  `writing-mode` and `direction`. |
+| .`inlineOffset` | Returns the inline-direction offset from the line's writing mode origin. |
+| .`blockOffset` | Returns the block-direction offset from the line's writing mode origin. |
 | .`textFragments`[] | An array of `FormattedTextFragment` objects. |
 | .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the line (left side for horizontal LTR). |
 | .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the line (right side for horizontal LTR). |
@@ -346,8 +350,8 @@ though in this context the fragment is guaranteed to have consistent font metric
 the FontMetrics' `fonts` (a list) wouldn't apply.
 
 A Fragment object provides:
-* width/height
-* x/y offsets (from the `FormattedText` object's coordinate origin)
+* coordinate positions: x,y,inlineOffset,blockOffset
+* bounding boxes: width,height,inlineSize,blockSize
 * Everything on HTML's
    [`TextMetrics`](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) interface
 * ⚠🚧 Formatting result values (for font, etc.). Note: we would like to understand the use cases
@@ -360,10 +364,8 @@ A Fragment object provides:
 
 | APIs on `FormattedTextFragment` | Description |
 |---|---|
-| .`inlineSize` | Same as `FormattedText` definition. |
-| .`blockSize` | Same as `FormattedText` definition. |
-| .`inlineOffset` | Same as `FormattedTextLine` definition. |
-| .`blockOffset` | Same as `FormattedTextLine` definition. |
+| .`x`, `y`, `inlineOffset`, and `blockOffset` | Same as `FormattedTextLine` definition, but with offsets referring to this fragment. |
+| .`inlineSize`, `blockSize`, `width`, and `height` | Same as `FormattedTextLine` definition, but with sizes referring to this fragment. |
 | .`glyphs`[] | An array of dictionary objects containing glyph info (see next section). |
 | .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the fragment (direction-dependent). |
 | .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the fragment (right side for horizontal LTR). |
