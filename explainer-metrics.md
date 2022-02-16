@@ -191,12 +191,12 @@ In this example, the `FormattedText` metric's `reflowFrom` API is used to custom
 an image.
 
 ```js
-// Caller provides text to format, a font, width/height constraints,
+// Caller provides text to format, a CSS font string, width/height constraints,
 //  a box location/dimensions, and a rendering function callback 
 //  that accepts a `FormattedTextLine`
-function wrapAroundFloatLeftBox( text, font, constraints, box = { width: 200, height: 200, marginRightBottom: 10 }, renderFunc ) {
+function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200, height: 200, marginRightBottom: 10 }, renderFunc ) {
   // Format the input text
-  let formattedText = FormattedText.format( text, font );
+  let formattedText = FormattedText.format( text, cssFont );
   // Get the line height (all text will be on one line)
   // formattedText.height is the bounding box height of
   // the single line of text (its value will update as
@@ -226,7 +226,13 @@ function wrapAroundFloatLeftBox( text, font, constraints, box = { width: 200, he
 }
 ```
 
+A potential rendering using the above code might look like:
+
 ![Image of a cat in the upper-left corner of a text box, with text flowing to the image's right side and continuing below it.](explainerresources/Available-Width.png)
+
+Note: in the above example code, `reflowFrom` formats the current `lineIndex` *and all following 
+lines* to `constraints.width - x`. Thus, in this specific example, it is unnecessary to call 
+`reflowFrom` on each iteration of the loop when the computed `constraints.width - x` does not change.
 
 ### Thoughts on coordinate systems
 
