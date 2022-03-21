@@ -26,9 +26,10 @@ of metrics (a `FormattedText` instance) or an iterator that produces line metric
 instances). The capabilities of these (and other) metrics objects are described separately in 
 [the output text metrics](explainer-metrics.md).
 
-This explainer focuses on the **input** content for formatting text.
+This explainer focuses on the **input** parameters for formatting text.
 
 ### Principles
+
 * Don't create yet-another-data-model for holding text (e.g., `Text` nodes)--just use strings!
 * Scope formatting to the needs of inline text layout.
 * Leverage CSS as the universal text layout system for the web (even in an imperative model) which 
@@ -42,7 +43,7 @@ This explainer focuses on the **input** content for formatting text.
 * Provide easy-to-use ergonomics for JavaScript authors (iterator protocol)
 * Extensibility for internationalization hints and reserved future scenarios.
 
-## Formatting text
+## Formatting text all at once
 
 Formatted text can be obtained using two formatting functions: `format` and `lines`, both available as
 static functions of the `FormattedText` constructor object. The parameters to both functions are 
@@ -82,10 +83,11 @@ FormattedText.format( [ { text: "hello" }, { text: " world!" } ] );
 
 ### Adding some style
 
-Style for *all the text* (general styles) are provided via the second parameter to `format`.
-Style input uses the same syntax as Element inline styles 
-(i.e., `<span style="style text syntax">`) and is ultimately parsed with the same CSS parser.
-The following formatted text outputs will all be blue:
+Style for *all the text* (global styles for the purposes of this function call) are provided via
+the second parameter to `format`. Style input uses the same syntax as Element inline styles 
+(i.e., `<span style="color:blue;font-family:arial">` semi-colon separated property/value pairs)
+and is ultimately parsed with the same CSS parser. The following formatted text outputs will all 
+be blue:
 
 ```js
 FormattedText.format( "hello world!", "color: blue" );
@@ -125,26 +127,28 @@ FormattedText.format( [ "The quick ",
                       ], { style: "color: blue" } );
 ```
 
-A wide range of inline layout-related CSS is supported as style input to the `format` API.
+A wide range of inline layout-related CSS is supported as style input to the formatting functions.
 
-Styles specified in the second parameter apply to all text runs except where overridden on
-individual text objects (in the first parameter).
+Styles specified in the second parameter apply to all text runs except where the specific style
+property is also specified (overridden) on an individual text object (in the first parameter).
 
 ### Specifying constraints
 
-The final input to `format` are any constraints that should be applied to the formatted text.
-The primary constraints of interest to the API are the width and height of the containing block:
-how many CSS pixels are available for text layout.
+The constraints parameter (3rd parameter) is different depending on which formatting function is
+used.
 
-The layout flow will follow any writing-mode direction specified in the meta object, so in
-`horizontal-lr` (e.g., English) a width constraint on the containing block will cause line 
-wrapping in the inline direction; overflow will occur in the vertical direction. For specified 
-writing-modes such as `vertical-rl` (e.g., Chinese) a width constraint on the containing block 
-will only affect where overflow occurs--the line will not wrap because it is assumed to have 
-infinite vertical space to layout. To cause wrapping with `vertical-rl` writing modes, specify
-a height constraint instead.
+For the `format` function, the constraints of interest are the width and height of the text 
+container: how many CSS pixels are available for text layout.
 
-Constraints are specified on a constraint object using a `width` or `height` property:
+Within the specified constraint box, the layout flow will follow any writing-mode direction
+specified in the meta object, so in `horizontal-tb` (e.g., English) a width constraint on the
+containing block will cause line wrapping in the inline direction; overflow will occur in the
+vertical direction. For specified writing-modes such as `vertical-rl` (e.g., Chinese) a width
+constraint on the containing block will only affect where overflow occurs--and in that case, 
+the line will not wrap because it is assumed to have infinite vertical space to layout. To cause
+wrapping with `vertical-rl` writing modes, specify a height constraint instead.
+
+For `format`, constraints are specified on a constraint object using a `width` or `height` property:
 
 ```js
 // Wrap any text that exceeds 150 pixels
@@ -155,47 +159,43 @@ FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { wi
 
 **Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
 
-### Per-line constraints
+For the `lines` formatting function, the 3rd parameter is a single number, the desired (default)
+**inline size** which lines should not exceed, and where line wrapping must happen. Because the lines
+produced by the `lines` iterator will not be a part of any container, there is no need to provide 
+a block-direction constraint. This also means that the inline size constraint will be automatically 
+sensitive to the specified (or default) writing-mode of the input text. In mixed writing-mode scenarios, 
+lines will be artificially broken at writing-mode boundaries.
 
-As described in more detail in the [metrics explainer](explainer-metrics.md), it is also possible
-to specify per-line constraints: for example, if each line should be sized for positioning 
-independently within a complex layout.
+## Formatting Text line by line formatting
 
-In order to provide per-line constraints, the input text must still be provided to `format`, as
-previously described, in order to obtain a `FormattedText` instance (the text metrics object).
-A `FormattedText` instance provides a `reflowFrom` API in order to re-constrain a specified line
-and all following lines to new dimensions. This can be repeated iteratively as desired until all 
-lines have been processed.
+As an alternative to `format`, the `lines` formatting function will prepare an iterator that progressively
+formats the provided input line by line. The lines are returned by the iterator directly without the 
+context of any container structure.
+
+```js
+// Get a line iterator...
+let iter = FormattedText.lines( [ "The quick ", 
+                                  { text: "brown", style: "color: brown; font-weight: bold" },
+                                  " fox jumps over the lazy dog." 
+                                ], "font-style: italic", 350 );
+```
+
+
 
 ## Comparison to HTML
 
-`format` is used to drive the web platform's layout engine, but using the JavaScript-based data
-model described above. Therefore, the output of `format` should be the equivalent to what can be
-already performed in HTML using simple elements like `div` and `span`. The following two expressions
-are functionally equivalent, with the exception that the result of `format` has not been rendered
-(and thus can't be visualized yet):
+The formatting functions are used to drive the web platform's layout engine, therefore, the output of
+`format` and `lines` should be the equivalent to what can be already performed in HTML using simple 
+elements like `div` and `span`. The following two expressions are functionally equivalent, with the
+exception that the result of `format` has not been rendered (how to
+[render it is described separately](explainer-rendering.md)):
 
 ```js
 FormattedText.format( [ "The quick ",
                         { text: "brown", style: "color: brown; font-weight: bold" },
                         " fox jumps over the lazy dog"
-                      ], null, { width: 150 } );
+                      ], null, { width: 150, height: 100 } );
 ```
-
-```html
-<div style="width:150px">
-  <span id="meta_object">
-    The quick <span style="color: brown; font-weight: bold">brown</span> fox jumps over the lazy dog
-  </span>
-</div>
-```
-
-Above, the `<div>` element is the container for an inline formatting context which sets the 
-inline wrapping width, and the `<span id="meta_object">` gets any meta object styling (in this
-case, nothing), and contains the formatting for the text runs. The text run styles on the word
-"brown" are applied to its immediate containing span. More precisely: since each text object
-in the array has the potential to be styled, the following markup better represents 
-the semantic equivalent:
 
 ```html
 <div style="width:150px">
@@ -206,6 +206,11 @@ the semantic equivalent:
   </span>
 </div>
 ```
+
+Above, the `<div>` element is the container for an inline formatting context which sets the 
+available width and height in which to layout the content, and the `<span id="meta_object">` gets
+any meta object styling (in this case, nothing), and contains the formatting for the text runs.
+The text run styles on the word "brown" are applied to its immediate containing span.
 
 Another illustrative comparison shows how style on the meta object provided to `format` could be
 visualized:
