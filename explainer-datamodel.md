@@ -1,52 +1,58 @@
-Formatted Text - Input Data Model
-=============
-The input object model that describes multi-line formatted text before it is shaped and formatted.
-The input consists of text (from JavaScript strings), text metadata (e.g., for internationalization),
-and text formats/style. Formatted text scenarios involve both document and non-document (Worker)
-scenarios and thus have no dependency on DOM Text nodes or Elements.
+# Formatted Text - Input Data Model
 
-This explainer focuses on the input data model for formatted text. The output is captured in 
-a separate explainer for [formatted text metrics](explainer-metrics.md). The metrics can also
-be [rendered](explainer-rendering.md) if desired. For a general overview of the problem space,
-see the [readme](README.md).
+This document describes how to provide input text (and associated formats) that describe multi-line
+formatted text in order to have it shaped and formatted into metrics. The input consists of text
+(JavaScript strings), along with metadata (e.g., for internationalization) and CSS formats/style.
+Formatted text can be created in both document and non-document (Worker) scenarios and has no
+dependency on DOM Text nodes or Elements.
+
+This explainer focuses on the input data model for formatted text. The output is described in 
+a separate [formatted text metrics](explainer-metrics.md) explainer. The obtained metrics objects
+can then be [rendered](explainer-rendering.md) if desired. For the motivating problems and use
+cases, see the [readme](README.md).
 
 ## Providing an input model for formatted text
 
 On the web today, to render text there are two general options: use the DOM (HTML's 
 `CharacterData`/`Text` nodes or SVG Text-related Elements), where text is collected in the
 document's "retained" mode infrastructure; the web platform decides when and how to compose and
-render the text with declarative input from you (in the form of CSS); or you can use Canvas and
-"write" the text when and how you want with JavaScript (an "immediate" mode approach). Canvas
-provides very limited text support today and (by design) leaves any special formatting, text
+render the text with declarative input from you (in the form of CSS); alternatively, Canvas can
+be used to measure (and render) the text directly with JavaScript (an "immediate" mode approach).
+Canvas provides very limited text support today and (by design) leaves any special formatting, text
 wrapping, international support, etc., up to the JavaScript author.
 
-Of principal interest to most text-based scenarios is not the data model itself--that is,
-*applications will already have an existing data model*, and because these applications interface
-with the web, they use JavaScript primitives at some point to express their text. A secondary 
-"retained" data model specified just for this feature is unnecessary. Instead of creating platform
-objects to retain a data model for incremental updates, this feature only requires that existing
-JavaScript strings be structured and input into a "formatter" operation in a particular structure 
-in order to get to what is really important: [the output text metrics](explainer-metrics.md).
+Input text and formats are fed into one of two "formatter functions" that produce either a container
+of metrics (a `FormattedText` instance) or an iterator that produces line metrics (`FormattedTextLine`
+instances). The capabilities of these (and other) metrics objects are described separately in 
+[the output text metrics](explainer-metrics.md).
 
-In this explainer, the input structure for formatting text is presented along with a simple structure
-for creating reusable formatting.
+This explainer focuses on the **input** content for formatting text.
 
 ### Principles
-* Enable re-use of existing application string data.
+* Don't create yet-another-data-model for holding text (e.g., `Text` nodes)--just use strings!
 * Scope formatting to the needs of inline text layout.
 * Leverage CSS as the universal text layout system for the web (even in an imperative model) which 
     also provides for future extensibility.
 * Avoid multi-level hierarchal text structures (which ultimately must be linearly iterated for 
-    rendering)
-* Object-centric model (versus range+indexes) to improve encapsulation and avoid problems with 
-    overlapping formatting.
+    rendering anyway)
+* Object-centric model (versus range+indexes) avoids common problems with overlapping indexes and
+    is a familiar design pattern for authors.
+* Provide flexibility for simple use cases (flowing a single paragraph in a container) _and_ 
+    advanced use cases (fragmentation, pagination, custom flowing and wrapping such as CSS regions).
+* Provide easy-to-use ergonomics for JavaScript authors (iterator protocol)
 * Extensibility for internationalization hints and reserved future scenarios.
 
-## Formatting text (`FormattedText.format`)
+## Formatting text
 
-The data model comprises the parameters to the operation `format` which takes the input data model
-and produces output [text metrics](explainer-metrics.md) (`format` is a static method of the
-`FormattedText` constructor). The input consists of:
+Formatted text can be obtained using two formatting functions: `format` and `lines`, both available as
+static functions of the `FormattedText` constructor object. The parameters to both functions are 
+similar. This section will describe the input data model in terms of the `format` formatting function.
+`lines` will be described later on.
+
+`format` produces output [text metrics](explainer-metrics.md) directly in one call. The result of all
+the text formatting (and potential line wrapping) is available on the synchronously returned 
+`FormattedText` instance, which represents the text metrics for a container or paragraph of formatted
+text. The input parameters are:
 
 1. text or an array of text
 2. metadata/ style for all the text
