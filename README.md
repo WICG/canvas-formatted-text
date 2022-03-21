@@ -152,11 +152,17 @@ Furthermore, simplifying the data model was advantageous for performance-critica
 scenarios that inlcude the creation time of the data model, in addition to layout and
 rendering optimizations.
 
-### Intermediate line objects
+### Measure/render pattern for intermediate line objects
 In a previous iteration of this proposal, we called for a "simple" and "advanced"
 model for rendering formatted text to the canvas. The advanced model allowed authors
 to place arbitrary lines by alternately measuring a part of the data model and then
 rendering the resulting "line metrics" object.
+
+**Note: a newer version of this _measure/render_ design has been integrated into the 
+latest iteration of this proposal, although it uses an iterable design pattern. Scenarios
+that require potentially flowing text through _multiple_ containers (such as implementing
+custom line positioning for CSS regions/ pagination / multicolumn were the motivation 
+for bringing this capability back despite some of the downsides noted below.**
 
 Under that design, we were assuming that authors would want to cache and re-use the
 line objects that were produced. If authors would not re-use these objects, then no
