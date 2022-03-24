@@ -584,6 +584,9 @@ interface FormattedText {
   static FormattedText format( ( DOMString or FormattedTextRun or sequence<( DOMString or FormattedTextRun )> ) text,
                                optional ( DOMString or FormattedTextStyle or FormattedTextMetadata ) metadata,
                                optional FormattedTextConstraints constraints );
+  static FormattedTextIterator lines( ( DOMString or FormattedTextRun or sequence<( DOMString or FormattedTextRun )> ) text,
+                                      optional ( DOMString or FormattedTextStyle or FormattedTextMetadata ) metadata,
+                                      optional double inlineSize );
 };
 
 [Exposed=Window,Worker] 
@@ -602,8 +605,21 @@ dictionary FormattedTextRun : FormattedTextMetadata {
 }; 
 
 dictionary FormattedTextConstraints {
-  unsigned long width;
-  unsigned long height;
+  double width;
+  double height;
+};
+
+interface FormattedTextIterator {
+  readonly attribute unsigned long lineCount;
+  FormattedTextIterator [Symbol.iterator](); // returns self
+  FormattedTextIteratorProtocolResult next( long additionalLines );
+  attribute double inlineSize;
+  void reset( long lineIndex );
+};
+
+dictionary FormattedTextIteratorProtocolResult {
+  (FormattedTextLine? or sequence<FormattedTextLine>) value;
+  boolean done;
 };
 ```
 
