@@ -51,7 +51,7 @@ similar. This section will describe the input data model in terms of the `format
 `lines` will be described later on.
 
 `format` produces output [text metrics](explainer-metrics.md) directly in one call. The result of all
-the text formatting (and potential line wrapping) is available on the synchronously returned 
+the text formatting (and potential line wrapping) is available on a synchronously returned 
 `FormattedText` instance, which represents the text metrics for a container or paragraph of formatted
 text. The input parameters are:
 
@@ -166,21 +166,184 @@ a block-direction constraint. This also means that the inline size constraint wi
 sensitive to the specified (or default) writing-mode of the input text. In mixed writing-mode scenarios, 
 lines will be artificially broken at writing-mode boundaries.
 
-## Formatting Text line by line formatting
+```js
+// Specify the desired default line wrapping distance (in the inline direction) of 150 pixels for each 
+//  line that will be produced by the lines() iterator.
+FormattedText.lines( "The quick brown fox jumps over the lazy dog.", null, 150 );
+```
 
-As an alternative to `format`, the `lines` formatting function will prepare an iterator that progressively
-formats the provided input line by line. The lines are returned by the iterator directly without the 
-context of any container structure.
+## Formatting Text line by line
+
+As an alternative to `format`, the **`lines`** formatting function will prepare an iterator that progressively
+formats the provided input line by line. The lines are returned by the iterator directly, as `FormattedTextLine`
+instances, without any container structure (e.g., not contained within a `FormattedText` instance as `format`
+produces). Because there is no container structure, web authors are responsible for using the metrics exposed
+on each line to manually position them as desired.
 
 ```js
-// Get a line iterator...
+// Format the input text as specified, with line-breaks at 350 pixels.
 let iter = FormattedText.lines( [ "The quick ", 
                                   { text: "brown", style: "color: brown; font-weight: bold" },
                                   " fox jumps over the lazy dog." 
                                 ], "font-style: italic", 350 );
+// Use for..of to advance the iterator and get each line.
+for ( let line of iter ) {
+    // TODO: lookup metrics info on the line instance and/or prepare to render it in a custom location
+}
 ```
 
+### Custom line breaking
 
+In many scenarios, authors may want to customize the inlineSize constraint applied to each line as the iterator 
+runs. The iterator returned by `lines` has a read/write property called `inlineSize` which specifies where the
+next line's inlineSize break opportunity should be. It's default value is the value provided in the `lines` 
+function (parameter 3). The `inlineSize` property can be set to change the value used by the iterator. If the
+`inlineSize` value is changed, the change is "sticky" and will persist for subsequent lines until changed again.
+
+For example, if there is some external shape that text needs to wrap around, the lines iterator can be adjusted 
+at the appropriate times to shorten or lengthen the `inlineSize` constraint so that the lines can be positioned
+properly (line positioning must be done manually).
+
+![Image of a cat in the upper-left corner of a text box, with text flowing to the image's right side and continuing below it.](explainerresources/Available-Width.png)
+
+```js
+// Caller provides text to format, a CSS font string, width/height constraints,
+//  a box location/dimensions, and a rendering function callback 
+//  that accepts a `FormattedTextLine` (result from the lines iterator).
+function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200, height: 200, marginRightBottom: 10 }, renderFunc ) {
+
+  // Prepare the input text and get a line iterator
+  //  (Set the default inlineSize for line-wrapping to the known constrained space.)
+  let formattedTextIterator = FormattedText.lines( text, cssFont, constraints.width - box.marginRightBottom + box.width );
+  
+  // sum of line metrics (collected from line instances)
+  let lineHeightTotal = 0;
+  // horizontal position offset for line placement (starts offset)
+  let offsetX = box.marginRightBottom + box.width;
+  
+  // Start iterating lines...
+  let { done, value: line } = formattedTextIterator.next();
+  while ( !done ) {
+    
+    // Render the line at the current offsets
+    renderFunc( line, offsetX, lineHeightTotal );
+    
+    // Prepare for the next line (using line metrics)
+    lineHeightTotal += line.height;
+        
+    // Determine if the offsetX position needs to change
+    if ( lineHeightTotal > ( box.marginRightBottom + box.height ) ) {
+      offsetX = 0;
+      formattedTextIterator.inlineSize = constraints.width; // Change the iterator's line-break position for subsequent lines...
+    }   
+   
+    // Request the next line (if available)
+    ( { done, value: line } = formattedTextIterator.next() );
+  }
+}
+```
+
+### Fast-forwarding of line iteration
+
+In some cases, the only tweaking that needs to be done comes early in an algorithm (such as in the 
+above algorithm, where once the line length (inlineSize) adjustment has been made to the iterator,
+the rest of the lines will not need any adjustments.
+
+The iterator can be quickly "fast-forwarded" by supplying the number of desired next lines in the 
+first parameter to the call to `next()`:
+
+```js
+// Have the iterator generate the next line (1 line at a time is the default)
+formattedTextIterator.next(1); // "value" will be a FormattedTextLine instance.
+
+// Have the iterator generate the next two lines
+formattedTextIterator.next(2); // "value" will be an array of up to two FormattedTextLine instances
+
+// Have the iterator generate the next 100 lines
+formattedTextIterator.next(100); // "value" will be an array of up to 100 FormattedTextLine instances
+
+// Have the iterator generate all the next lines
+formattedTextIterator.next(0);
+formattedTextIterator.next(-1); 
+// "value" will be an array containing all of the remaining lines (for any integer value of <= 0)
+```
+
+### Rewinding line iteration
+
+In some scenarios (for example, an algorithm for a balanced multi-column line layout), it is sometimes
+necessary to "roll-back" and reprocess a line that was previously produced by the iterator to adjust 
+its line-break constraints.
+
+The `lines` iterator keeps track of the number of lines that it has produced so far via the `lineCount` 
+readonly property. In the event that the web author needs to revisit a prior line, the iterator can be
+`reset` back to a line `<=` the current iterator's `lineCount` value. Any line instances that were
+previously provided via the iterator following the line that the iterator is reset to are "discarded"
+(no longer usable). The `reset` function takes a singe integer parameter. If the number is zero or 
+positive, the iterator is reset to the specified line index.
+
+```js
+formattedTextIterator.reset(0); // Rewinds the iterator to before the first line (the beginning)
+
+formattedTextIterator.reset(1); // Rewinds the iterator to just after the first line (start of the second line)
+```
+A negative value resets the iterator to a relative number of lines from the current `lineCount` value.
+
+```js
+// Assuming formattedTextIterator.lineCount == 1
+formattedTextIterator.reset(-1); // Rewinds the iterator by 1 line to the beginning (line 0). lineCount will be 0.
+
+// Assuming formattedTextIterator.lineCount == 5
+formattedTextIterator.reset(-2); // Rewinds the iterator by 2 lines to the end of line 3 (start of line 4). lineCount will be 3
+```
+
+The following example implements a naïve multi-column line balancer, where the text lines should be
+(approximately) balanced between columns of differing widths.
+
+```js
+// Text line positioner for two non-uniform columns
+// (assumes infinite block-size for each column)
+// (assumes uniform formatting for all the text)
+function multiColumnFiller( text, col1Box, col2Box, renderFunc ) {
+  let col1_inlineSize = col1Box.width;
+  let col2_inlineSize = col2Box.width;
+  
+  // What is the ratio of the first column's width compared to the total width?
+  let ratio = col1_inlineSize / ( col1_inlineSize + col2_inlineSize );
+  // Naïvely then, 'ratio' of the total number of lines that will fit in col1 will stay in col1
+  //  the rest will be balanced to col2.
+  
+  // How many lines fit in col1 given its size?
+  let lineIter = FormattedText.lines( text, null, col1_inlineSize );
+  let col1Lines = lineIter.next(0).value; // process all the lines and return them in an array
+  
+  // Rough-out the line at which to move the rest to column 2
+  let cutLineIndex = Math.floor( ratio * lineIter.lineCount );
+  // Discard the lines (inclusive) after this cut line from column 1's lines.
+  col1Lines.splice( cutLineIndex );
+  
+  // Reset the iterator to the cut-line index, adjust the iterator's inlineSize constraint, and
+  //  get the rest of the lines
+  lineIter.reset( cutLineIndex );
+  lineIter.inlineSize = col2_inlineSize;
+  let col2Lines = lineIter.next(0).value;
+  
+  // Assign positions for each of the lines in both columns and render (left-justified)
+  // First column location
+  let xPos = col1Box.x;
+  let yPos = col1Box.y;
+  for ( let line of col1Lines ) {
+    renderFunc( line, xPos, yPos );
+    yPos += line.height;
+  }
+  // Second column location
+  xPos = col2Box.x;
+  yPos = col2Box.y;
+  for ( let line of col2Lines ) {
+    renderFunc( line, xPos, yPos );
+    yPos += line.height;
+  }
+}
+```
 
 ## Comparison to HTML
 
