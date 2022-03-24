@@ -39,8 +39,7 @@ each line iteratively (such as for captions), or with custom spacing such as to 
 unique layout or flow (or handle inline gaps such as for figures that flow with the text.
 
 Metrics provide:
-* Access to formatted line objects with width and height (including their offsets from the
-   `FormattedText` container)
+* Access to formatted line objects with width and height
 * Pointers back to the input characters for the bounds positions of each line.
 
 ## 3. Use Case: specific glyph placement
