@@ -701,12 +701,14 @@ For example, it does not include many of the new logical properites such as `inl
 
 ## Accessibility Considerations
 
-While the input to the `format` function is not expected to be accessible, the resulting text metrics output
-will be useful in providing the means to enable fully accessible scenarios. This will be described in
-greater detail in the text metrics explainer.
+While the input to the `format` or `lines` functions is not expected to be accessible (it's the web
+author's internal data model), the resulting text metrics output will be useful in providing the means 
+to enable fully accessible scenarios. This will be described in greater detail in the text metrics
+explainer.
 
 ## The output of `format`
-The [next explainer](explainer-metrics.md) describes the output from the `format` function.
+The [next explainer](explainer-metrics.md) describes the output from the `format` and `lines` functions,
+e.g., the `FormattedText` and `FormattedTextLine` instance objects and related info.
 
 ## Contributors:
  [dlibby-](https://github.com/dlibby-),
