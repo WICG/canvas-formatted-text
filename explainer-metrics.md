@@ -39,8 +39,6 @@ each line iteratively (such as for captions), or with custom spacing such as to 
 unique layout or flow (or handle inline gaps such as for figures that flow with the text.
 
 Metrics provide:
-* `reflowFrom` API to specify the line and constraints which should be applied to that line
-    and all following lines. (Lines prior to the line number specified are not re-constrained.)
 * Access to formatted line objects with width and height (including their offsets from the
    `FormattedText` container)
 * Pointers back to the input characters for the bounds positions of each line.
@@ -173,7 +171,6 @@ This is the top-level container returned by `format`. It provides:
 | .`lines`[] | An array of `FormattedTextLine` objects representing distinct lines of text in the inline flow.<sup>*</sup> |
 | .`getPosition`(`textIndex`, `charIndex`) | Given a reference to an in input character (and the text object offset; 0 if only one string of text provided), returns a `FormattedTextPosition` of the associated place in the output metrics. |
 | .`getPositionFromPoint`(`x`,`y`,`findNearest`) | For mapping pointer positions into glyphs. `findNearest` might ensure that a `FormattedTextPosition` is always returned regardless of the coordinate value, whereas otherwise, `null` might be returned if not strictly over a glyph. |
-| .`reflowFrom`(`lineIndex`, `contraints`) | Reclaculates line breaking given the existing text and formats against new constraints for the provided line and its following lines only (does not impact line indexes less than the provided line index). |
 
 <sup>*In most cases, e.g., all cases where `FormattedText` instances are returned from the
 `format` command, each `FormattedTextLine` object in the array will correspond to a separate visual
@@ -182,57 +179,6 @@ it is possible that multiple `FormattedTextLine` objects may be visually located
 when they are broken by non-inline content (such as figures, tables, etc., that are of 
 `display: inline-block` layout). In this latter case, the positions and offsets of each 
 `FormattedTextLine` will identify these situations.</sup>
-
-### Examples
-
-#### 1. Custom line layout (line at a time)
-
-In this example, the `FormattedText` metric's `reflowFrom` API is used to custom-wrap lines around 
-an image.
-
-```js
-// Caller provides text to format, a CSS font string, width/height constraints,
-//  a box location/dimensions, and a rendering function callback 
-//  that accepts a `FormattedTextLine`
-function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200, height: 200, marginRightBottom: 10 }, renderFunc ) {
-  // Format the input text
-  let formattedText = FormattedText.format( text, cssFont );
-  // Get the line height (all text will be on one line)
-  // formattedText.height is the bounding box height of
-  // the single line of text (its value will update as
-  // the line is reflowed)
-  let lineHeight = formattedText.height; // same as formattedText.lines[0].height (for now)
-  let y = 0; // For custom line placement
-  let lineIndex = 0; // For iterating the lines
-  
-  do {
-    // Determine x position for line custom line placement.
-    if ( y <= ( box.marginRightBottom + box.height ) ) {
-      x = box.marginRightBottom + box.width;
-    }
-    else {
-      x = 0;
-    }
-    // Constrain the line to the available width...
-    formattedText.reflowFrom( lineIndex, { width: constraints.width - x } );
-    
-    // Render that line...
-    renderFunc( formattedText.lines[ lineIndex ], x, y );
-    
-    y += lineHeight;
-    lineIndex++; // Move to the next line...
-    
-  } while ( formattedText.lines[ lineIndex ] ); // Exits when all lines are processed
-}
-```
-
-A potential rendering using the above code might look like:
-
-![Image of a cat in the upper-left corner of a text box, with text flowing to the image's right side and continuing below it.](explainerresources/Available-Width.png)
-
-Note: in the above example code, `reflowFrom` formats the current `lineIndex` *and all following 
-lines* to `constraints.width - x`. Thus, in this specific example, it is unnecessary to call 
-`reflowFrom` on each iteration of the loop when the computed `constraints.width - x` does not change.
 
 ### Coordinate systems
 
