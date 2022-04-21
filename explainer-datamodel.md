@@ -83,6 +83,10 @@ FormattedText.format( [ { text: "hello" }, { text: " world!" } ] );
 
 ### Adding some style
 
+Prior to this point, the formatter functions will apply default styles in their operation, based
+on the default styles of CSS (such as `font-family`, `font-size`, `color`, etc.). But default 
+styles are boring. Here's how to add your own style and formatting to the text.
+
 Style for *all the text* (global styles for the purposes of this function call) are provided via
 the second parameter to `format`. Style input uses the same syntax as Element inline styles 
 (i.e., `<span style="color:blue;font-family:arial">` semi-colon separated property/value pairs)
@@ -254,18 +258,18 @@ first parameter to the call to `next()`:
 
 ```js
 // Have the iterator generate the next line (1 line at a time is the default)
-formattedTextIterator.next(1); // "value" will be a FormattedTextLine instance.
+formattedTextIterator.next(1); // return value will be a FormattedTextLine instance.
 
 // Have the iterator generate the next two lines
-formattedTextIterator.next(2); // "value" will be an array of up to two FormattedTextLine instances
+formattedTextIterator.next(2); // return value will be an array of up to two FormattedTextLine instances
 
 // Have the iterator generate the next 100 lines
-formattedTextIterator.next(100); // "value" will be an array of up to 100 FormattedTextLine instances
+formattedTextIterator.next(100); // return value will be an array of up to 100 FormattedTextLine instances
 
 // Have the iterator generate all the next lines
 formattedTextIterator.next(0);
 formattedTextIterator.next(-1); 
-// "value" will be an array containing all of the remaining lines (for any integer value of <= 0)
+// return values will be an array containing all of the remaining lines (for any integer value of <= 0)
 ```
 
 ### Rewinding line iteration
