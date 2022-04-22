@@ -1,17 +1,8 @@
 # Formatted Text - Metrics
 
 A representation of formatted text metrics for inline layout content: the result of the `format`
-function or [potentially] other APIs that extract formatted text metrics from other sources
-(e.g., DOM nodes, Layout Worklets).
-
-Additional scenarios include different web application rendering systems which can make use of
-the text shaping information to perform their own rendering logic. For example WebGL based apps
-with text content. The metrics would be used to determine how to correctly position glyphs in a
-typographically correct manner.
-
-We took extensive inspiration from the [Text API explainer](https://github.com/google/skia/blob/main/site/docs/dev/design/text_overview.md),
-and the use cases supporting the rendering of glyphs as described therein, as well as the
-notion of a Position object.
+or `lines` functions or [potentially] other APIs that extract formatted text metrics from other
+sources (e.g., DOM nodes, layout children).
 
 For a general overview of the feature, see the repo's [readme](README.md).
 You can also learn more about the [formatted text data model](explainer-datamodel.md) and
@@ -27,19 +18,18 @@ coordinate (x/y) and size metrics (bounding box of width/height).
 
 * Metrics provide the final shaped and formatted text width and height.
 
-Authors ensure rendered text will fit in
-   the space provided by their data model. If not, they can adjust font-size, line-width,
-   line-spacing, etc., on the input text objects and re-`format` until
-   the desired goal is met.
+Authors ensure rendered text is properly constrained to fit in the space provided by adjusting 
+`font-size`, line width, line-spacing, etc., on the input text objects.
 
 ## 2. Use Case: line placement and custom per-line lengths
 
 In this case, the author would like to specify per-line constraints and intends to render
 each line iteratively (such as for captions), or with custom spacing such as to fit into a
-unique layout or flow (or handle inline gaps such as for figures that flow with the text.
+unique layout or flow (or handle inline gaps such as for figures that flow with the text).
+The `lines` iterator provides access to one or all lines given a line length constraint.
 
 Metrics provide:
-* Access to formatted line objects with width and height
+* Formatted line objects with width and height, including...
 * Pointers back to the input characters for the bounds positions of each line.
 
 ## 3. Use Case: specific glyph placement
@@ -137,9 +127,9 @@ and glyph information, potentially allowing advanced positioning of glyphs withi
 
 # Description of objects
 
-## Root metrics container - `FormattedText`
+## Line container - `FormattedText`
 
-This is the top-level container returned by `format`. It provides:
+Obtained as the result of `FormattedText.format`. It provides:
 
 * width/height (total bounding box for all lines).
 * array of `FormattedTextLine` objects.
@@ -150,50 +140,43 @@ This is the top-level container returned by `format`. It provides:
 * Pointer-to-output mapping APIs (hit testing)
     * Getting a position from an x/y coordinate pair (where the x/y coordinates
        are relative to the `FormattedText` object's coordinate system.
-* Reformatting APIs
-    * Adjusting the current "flow" of the text by providing updated width/height
-       constraints for a given line and its following lines.
 
 | APIs on `FormattedText` | Description |
 |---|---|
-| .`width` | Returns the bounding-box width for all lines (adjusted as lines are re-constrained). For vertical writing modes, the value may exceed the provided width constraint if additional lines wrap beyond the provided width (the block direction for vertical writing modes). |
-| .`height` | Returns the bounding-box height for all lines (adjusted as lines are re-constrained). For horizontal writing modes, the value may exceed the provided height constraint if additional lines wrap beyond the provided height (the block direction for horizontal writing modes). |
-| .`lines`[] | An array of `FormattedTextLine` objects representing distinct lines of text in the inline flow.<sup>*</sup> |
+| .`width` | Returns the bounding-box width for all lines. This value may represent the bounds of the contained line's longest length or total height depending on the `writing-mode` and `direction` used to format the line. |
+| .`height` | Returns the bounding-box height for all lines. Independent of `writing-mode` as `width` above. |
+| .`lines`[] | An array of `FormattedTextLine` objects representing a sequence of heterogeneous formatted text in the inline flow. |
 | .`getPosition`(`textIndex`, `charIndex`) | Given a reference to an in input character (and the text object offset; 0 if only one string of text provided), returns a `FormattedTextPosition` of the associated place in the output metrics. |
 | .`getPositionFromPoint`(`x`,`y`,`findNearest`) | For mapping pointer positions into glyphs. `findNearest` might ensure that a `FormattedTextPosition` is always returned regardless of the coordinate value, whereas otherwise, `null` might be returned if not strictly over a glyph. |
 
-<sup>*In most cases, e.g., all cases where `FormattedText` instances are returned from the
-`format` command, each `FormattedTextLine` object in the array will correspond to a separate visual
-line for rendering. However, in cases where a `FormattedText` instance is created from a DOM node,
-it is possible that multiple `FormattedTextLine` objects may be visually located on the same line
-when they are broken by non-inline content (such as figures, tables, etc., that are of 
-`display: inline-block` layout). In this latter case, the positions and offsets of each 
-`FormattedTextLine` will identify these situations.</sup>
-
 ### Coordinate systems
 
-Some APIs on the `FormattedText` object depend on coordinate systems for hit-testing, such as the
-`getPositionFromPoint` API, which takes an x/y pair. To simplify the logic for developers when
-translating between input pointer coordinates in viewport space and the coordinate space used by 
-`FormattedText` objects, each `FormattedText` object has a *pointer origin* or *pointer coordinate
-space* with its origin in the typical upper-left corner of the bounding box rectangle that contains
+Some APIs on the `FormattedText` and `FormattedTextLine` objects depend on coordinate systems for
+hit-testing, such as the `getPositionFromPoint` API, which takes an x/y pair. To simplify the logic 
+for developers when translating between input pointer coordinates in viewport space and the coordinate
+space used by `FormattedText` objects, each `FormattedText` object has a *pointer origin* or *pointer 
+coordinate space* with its origin in the upper-left corner of the bounding box rectangle that contains
 all the lines of text. For pointer tracking, all `x`/`y`/`width`/`height` values for the 
-`FormattedTextLine`, etc. objects are absolute values relative to the origin of 
-the pointer-origin coordinate space.
+`FormattedTextLine`, etc. objects it contains are absolute values relative to the origin of the
+pointer-origin coordinate space. Because `FormattedTextLine`s that come from the `lines` iterator do
+not have a `FormattedText` container, the pointer-origin for each such line is the upper-left corner
+of the bounding box rectangle of the individual line itself.
 
 The pointer-origin coordinate space is not the most developer friendly for computing line offsets 
-and positions in other writing modes. For that reason, `FormattedTextLine`, `FormattedTextFragment`,
+and positions in orthogonal writing modes. For that reason, `FormattedTextLine`, `FormattedTextFragment`,
 etc., objects also have a *writing mode origin* or *writing mode coordinate space* which is the 
 origin of the block and inline progression directions for the chosen writing mode.
-`inlineSize`/`blockSize`/`inlineOffset`/`blockOffset` values are each relative to the writing mode
-origin for the set of lines formatted using that writing mode.
+`inlineSize`/`blockSize` provide sizing that is relative to the writing mode. For lines obtained from
+`format` (that have a `FormattedText` container) their `inlineOffset`/`blockOffset` values are relative
+to the writing mode origin for the set of lines formatted using that writing mode. Lines obtained from the
+`lines` iterator will always have a zero `inlineOffset` and `blockOffset` value.
 
 For example, in a series of lines formatted with `writing-mode: vertical-rl` and `direction: ltr`, the
-first line is on the right side of the pointer coordiante space, vertically oriented. The first 
+first line is on the right side of the pointer coordinate space, vertically oriented. The first 
 line's origin in pointer coordinate space is the upper-left corner of the line's bounding box at
 position (`x`, `y`). The first line's origin in writing mode coordinate space is the upper-right
-corner of the line's bounding box, and being the first line, its (`inlineOffset`,`blockOffset`) is 
-(0, 0). The line's `blockSize` (i.e., line height) corresponds with the `width` value in the 
+corner of the line's bounding box. (Its `inlineOffset`, `blockOffset` values may be non-zero if the line
+is centered or justified.) The line's `blockSize` (i.e., line height) corresponds with the `width` value in the 
 pointer coordinate space, while its `inlineSize` (i.e., line length) corresponds with the `height` 
 value in pointer coordinate space.
 
@@ -241,8 +224,8 @@ These are covered below in the fragments section.
 The line is the bounding box of all the formatted fragments contained within the line (it has no
 formatting itself). All fragments contained within the line are wholly contained within (no fragments
 exist simultaneously in multiple lines). Note: due to justification or other inline alignment properties
-of the line, the line sizes and offsets may vary. The line's offsets are relative to the origin of its
-parent `FormattedText` object.
+of the line, the line sizes and offsets may vary. If contained by a `FormattedText` instance, the line's
+offsets are relative to the origin of its "parent" `FormattedText` object.
 
 The line provides:
 
@@ -257,12 +240,12 @@ The line provides:
 |---|---|
 | .`width` | The line's width in pointer coordinate space (upper-left corner of the `FormattedText` object's bounding box containing all lines). This value may represent the line's width or height depending on the `writing-mode` and `direction` used to format the line. |
 | .`height` | The line's height in pointer coordinate space. This value may represent the line's width or height depending on the `writing-mode` and `direction` used to format the line. |
-| .`x` | The line's x-offset in pointer coordinate space. |
-| .`y` | The line's y-offset in pointer coordinate space. |
+| .`x` | The line's x-offset in pointer coordinate space (if held by a `FormattedText` container). Otherwise zero. |
+| .`y` | The line's y-offset in pointer coordinate space (if held by a `FormattedText` container). Otherwise zero. |
 | .`inlineSize` | The line's length in the inline direction (i.e., the direction of adjacent characters in the line of text). This value will always be the line's "width" regardless of  `writing-mode` and `direction`. |
 | .`blockSize` | The line's height in the block direction (opposite of inline direction). This value will always be the line's "height" regardless of  `writing-mode` and `direction`. |
-| .`inlineOffset` | Returns the inline-direction offset from the line's writing mode origin. |
-| .`blockOffset` | Returns the block-direction offset from the line's writing mode origin. |
+| .`inlineOffset` | Returns the inline-direction offset from the line's writing mode origin (if held by a `FormattedText` container). Otherwise zero. |
+| .`blockOffset` | Returns the block-direction offset from the line's writing mode origin (if held by a `FormattedText` container). Otherwise zero. |
 | .`textFragments`[] | An array of `FormattedTextFragment` objects. |
 | .`getStartPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "start" end of the line (left side for horizontal LTR). |
 | .`getEndPosition`() | Returns a `FormattedTextPosition` of the glyph forming the "end" of the line (right side for horizontal LTR). |
