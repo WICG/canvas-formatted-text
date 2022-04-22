@@ -52,7 +52,7 @@ similar. This section will describe the input data model in terms of the `format
 
 `format` produces output [text metrics](explainer-metrics.md) directly in one call. The result of all
 the text formatting (and potential line wrapping) is available on a synchronously returned 
-`FormattedText` instance, which represents the text metrics for a container or paragraph of formatted
+`FormattedText` instance, which represents the text metrics for a container (or paragraph) of formatted
 text. The input parameters are:
 
 1. text or an array of text
@@ -83,9 +83,9 @@ FormattedText.format( [ { text: "hello" }, { text: " world!" } ] );
 
 ### Adding some style
 
-Prior to this point, the formatter functions will apply default styles in their operation, based
-on the default styles of CSS (such as `font-family`, `font-size`, `color`, etc.). But default 
-styles are boring. Here's how to add your own style and formatting to the text.
+Without additional input, the formatter functions will apply default styles in their operation, based
+on the default styles of CSS (such as `font-family`, `font-size`, `color`, `writing-mode` etc.). But
+default styles are boring. Here's how to add your own style and formatting to the text.
 
 Style for *all the text* (global styles for the purposes of this function call) are provided via
 the second parameter to `format`. Style input uses the same syntax as Element inline styles 
@@ -138,43 +138,45 @@ property is also specified (overridden) on an individual text object (in the fir
 
 ### Specifying constraints
 
-The constraints parameter (3rd parameter) is different depending on which formatting function is
-used.
+The inline-size constraint is the 3rd parameter for both formatting functions. `format` has
+an additional 4th parameter for the block-size constraint. Because the `format` function 
+produces all the lines of text at once, the block-size constraint allows the author to specify 
+a maximum bound for the container in both directions.
 
-For the `format` function, the constraints of interest are the width and height of the text 
-container: how many CSS pixels are available for text layout.
-
-Within the specified constraint box, the layout flow will follow any writing-mode direction
-specified in the meta object, so in `horizontal-tb` (e.g., English) a width constraint on the
-containing block will cause line wrapping in the inline direction; overflow will occur in the
-vertical direction. For specified writing-modes such as `vertical-rl` (e.g., Chinese) a width
-constraint on the containing block will only affect where overflow occurs--and in that case, 
-the line will not wrap because it is assumed to have infinite vertical space to layout. To cause
-wrapping with `vertical-rl` writing modes, specify a height constraint instead.
-
-For `format`, constraints are specified on a constraint object using a `width` or `height` property:
-
-```js
-// Wrap any text that exceeds 150 pixels
-FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, { width: 150 } );
-```
-
-`width` and `height` are `unsigned long` values. Omitted values are assumed to be infinite.
-
-**Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
-
-For the `lines` formatting function, the 3rd parameter is a single number, the desired (default)
-**inline size** which lines should not exceed, and where line wrapping must happen. Because the lines
-produced by the `lines` iterator will not be a part of any container, there is no need to provide 
-a block-direction constraint. This also means that the inline size constraint will be automatically 
-sensitive to the specified (or default) writing-mode of the input text. In mixed writing-mode scenarios, 
-lines will be artificially broken at writing-mode boundaries.
+To specify an inline-direction constraint for line wrapping with the `lines` iterator:
 
 ```js
 // Specify the desired default line wrapping distance (in the inline direction) of 150 pixels for each 
 //  line that will be produced by the lines() iterator.
 FormattedText.lines( "The quick brown fox jumps over the lazy dog.", null, 150 );
 ```
+
+For `format`, an additional block-size constraint is provided via a 4th parameter:
+
+```js
+// Wrap any text that exceeds 150 pixels, and constrain to 300 pixels in the block direction
+FormattedText.format( "The quick brown fox jumps over the lazy dog.", null, 150, 300 );
+```
+
+The 3rd (and for `format`) 4th parameters are `unsigned long` values. Omitted values are assumed 
+to be infinite.
+
+The layout flow via `writing-mode` and `direction` style properties can only be set in the 2nd
+parameter (global styles for all the text) and this value (or the default value) is used to
+determine the orientation of the inline and block constraint values<sup>*</sup>. For example, 
+when the value is `horizontal-tb` (e.g., Latin-based languages) the 3rd parameter (inline-size
+width constraint) is a horizontal constraint for line wrapping; overflow of the block-size
+constraint (4th parameter) will occur in the vertical direction. For specified writing-modes such as
+`vertical-rl` (e.g., Chinese) the inline-size constraint affects the vertical direction, with overflow
+occurring horizontally.
+
+<sup>*</sup>HTML will handle `writing-mode` set on _inline_ elements (when the result is an orthogonal 
+writing mode direction) by "blockifying" the inline container into an inline-block in order to support the
+writing mode. This conversion from inline content to inline block is not supported in the Formatted
+Text input model, and thus paragraphs of text with nested orthogonal writing mode directions are not
+supported.
+
+**Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
 
 ## Formatting Text line by line
 
@@ -226,8 +228,7 @@ function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200,
   let offsetX = box.marginRightBottom + box.width;
   
   // Start iterating lines...
-  let { done, value: line } = formattedTextIterator.next();
-  while ( !done ) {
+  for ( let line of formattedTextIterator ) {
     
     // Render the line at the current offsets
     renderFunc( line, offsetX, lineHeightTotal );
@@ -240,12 +241,12 @@ function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200,
       offsetX = 0;
       formattedTextIterator.inlineSize = constraints.width; // Change the iterator's line-break position for subsequent lines...
     }   
-   
-    // Request the next line (if available)
-    ( { done, value: line } = formattedTextIterator.next() );
   }
 }
 ```
+
+*Note*, the iterator's [Symbol.iterator] function (used by the iterator protocol in for..of loops) 
+is a self-reference to the same iterator object, allowing convenient use inside of for..of loops.
 
 ### Fast-forwarding of line iteration
 
@@ -257,19 +258,23 @@ The iterator can be quickly "fast-forwarded" by supplying the number of desired 
 first parameter to the call to `next()`:
 
 ```js
-// Have the iterator generate the next line (1 line at a time is the default)
-formattedTextIterator.next(1); // return value will be a FormattedTextLine instance.
+// In each case, the return result from next() follows the JS iterator protocol, and will return an
+// object with a "value" and "done" property. The "value" property's value will be as indicated below.
 
-// Have the iterator generate the next two lines
-formattedTextIterator.next(2); // return value will be an array of up to two FormattedTextLine instances
+// Have the iterator generate the next line (1 line at a time is the default).
+formattedTextIterator.next();
+formattedTextIterator.next(1); // returns the next FormattedTextLine instance.
 
-// Have the iterator generate the next 100 lines
-formattedTextIterator.next(100); // return value will be an array of up to 100 FormattedTextLine instances
+// Have the iterator generate the next two lines.
+formattedTextIterator.next(2); // returns an array of up to two FormattedTextLine instances.
 
-// Have the iterator generate all the next lines
+// Have the iterator generate the next 100 lines.
+formattedTextIterator.next(100); // returns an array of up to 100 FormattedTextLine instances.
+
+// Have the iterator generate all the next lines.
 formattedTextIterator.next(0);
 formattedTextIterator.next(-1); 
-// return values will be an array containing all of the remaining lines (for any integer value of <= 0)
+// returns an array containing all of the remaining lines (for any integer value of <= 0).
 ```
 
 ### Rewinding line iteration
@@ -277,6 +282,9 @@ formattedTextIterator.next(-1);
 In some scenarios (for example, an algorithm for a balanced multi-column line layout), it is sometimes
 necessary to "roll-back" and reprocess a line that was previously produced by the iterator to adjust 
 its line-break constraints.
+
+**Issue**: traditional JS iterator protocol does not expect rewinding/skipping behavior. This needs careful 
+review and consideration for any unexpected language side-effects.
 
 The `lines` iterator keeps track of the number of lines that it has produced so far via the `lineCount` 
 readonly property. In the event that the web author needs to revisit a prior line, the iterator can be
@@ -361,7 +369,7 @@ exception that the result of `format` has not been rendered (how to
 FormattedText.format( [ "The quick ",
                         { text: "brown", style: "color: brown; font-weight: bold" },
                         " fox jumps over the lazy dog"
-                      ], null, { width: 150, height: 100 } );
+                      ], null, 150, 100 );
 ```
 
 ```html
@@ -411,10 +419,10 @@ direction:
 ```js
 let bold = "font-weight: bold";
 let meta = "writing-mode: vertical-rl; font-size: 36pt";
-FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, { height: 200 } );
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, 200 );
 ```
 
-[When rendered](explainer-rendering.md), and height-constrained as indicated, this will render as:
+[When rendered](explainer-rendering.md), and constrained as indicated, this will render as:
 
 <img src="explainerresources/vertical-text-cn.png" alt="Characters of an ancient Chinese proverb, vertically oriented in two columns, the second column bold">
 
@@ -430,7 +438,7 @@ let styles  = "writing-mode: vertical-lr;";
     styles += "font-size: 12pt";
 FormattedText.format( [ "It's better to make slow progress", 
                         { text: " than no progress at all", style: bold }
-                      ], styles, { height: 250 } );
+                      ], styles, 250 );
 ```
 
 This might render as:
@@ -477,12 +485,12 @@ FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold
 
 ### How much CSS should be supported?
 
-The `format` function supports various CSS properties that influence how the text's lines
-will ultimately be positioned. There are also many CSS properties that do not apply to text,
-that convert between typical text layout and other layouts, or that take normal flow content 
-out of flow (e.g., `float`, `position`, `display`, etc.). For the purposes of a formatted 
-text object model, not all CSS properties can or should be supported. The guidelines for
-what CSS to support and what not to support follow.
+The `format` and `lines` functions supports various CSS properties that influence how the
+text's lines will ultimately be positioned. There are also many CSS properties that do not 
+apply to text, that convert between typical text layout and other layouts, or that take 
+normal flow content out of flow (e.g., `float`, `position`, `display`, etc.). For the purposes
+of a formatted text object model, not all CSS properties can or should be supported. The
+guidelines for what CSS to support and what not to support follow.
 
 ### Focus on text-related CSS properties
 
@@ -513,9 +521,9 @@ some limited alternate layout container types where those alternate types provid
 capabilities. For example, we expect to support an inner display type of `ruby` in order to 
 become a Ruby container and enable the use of Ruby annotated layout. Other container types are
 not currently planned to initially support 
-but are good long-term candidates (e.g., multi-column containers created via the `columns`
-shorthand property), while still others are less-likely to be supported (e.g., `flex` and 
-`grid` container types, which are less useful for formatted text scenarios).
+but are interesting long-term candidates to consider (e.g., multi-column containers created via 
+the `columns` shorthand property), while still others are less-likely to be supported (e.g., `flex`
+and `grid` container types, which are less useful for formatted text scenarios).
 
 There are various CSS properties that provide helpful graphical emphasis to text that are 
 also supported. These are for convenience in supporting common text formatting scenarios
@@ -523,9 +531,9 @@ that would otherwise require detailed introspection of the object model's relate
 in order to correctly layout and render as desired with respect to the text. Because these
 features are already available in CSS layout engines and significantly ease author burden, 
 many of these CSS properties will be supported. Some supported examples include: 
-`text-decoration`, `text-shadow`, `box-shadow`, even `border`, `outline`, and limited `background` support 
-(where the metrics and composition processing do not require external dependencies, such as 
-image resources typically loaded by `url()` functions).
+`text-decoration`, `text-shadow`, `box-shadow`, even `border`, `outline`, and limited 
+`background` support (where the metrics and composition processing do not require external
+dependencies, such as image resources typically loaded by `url()` functions).
 
 ### Future extensions 
 
@@ -587,7 +595,7 @@ Might produce the following rendered output:
 interface FormattedText { 
   static FormattedText format( ( DOMString or FormattedTextRun or sequence<( DOMString or FormattedTextRun )> ) text,
                                optional ( DOMString or FormattedTextStyle or FormattedTextMetadata ) metadata,
-                               optional FormattedTextConstraints constraints );
+                               optional double inlineSize, optional double blockSize );
   static FormattedTextIterator lines( ( DOMString or FormattedTextRun or sequence<( DOMString or FormattedTextRun )> ) text,
                                       optional ( DOMString or FormattedTextStyle or FormattedTextMetadata ) metadata,
                                       optional double inlineSize );
@@ -608,15 +616,10 @@ dictionary FormattedTextRun : FormattedTextMetadata {
   DOMString text = "";
 }; 
 
-dictionary FormattedTextConstraints {
-  double width;
-  double height;
-};
-
 interface FormattedTextIterator {
   readonly attribute unsigned long lineCount;
   FormattedTextIterator [Symbol.iterator](); // returns self
-  FormattedTextIteratorProtocolResult next( long additionalLines );
+  FormattedTextIteratorProtocolResult next( long additionalLines = 1 );
   attribute double inlineSize;
   void reset( long lineIndex );
 };
@@ -651,7 +654,7 @@ For example, it does not include many of the new logical properites such as `inl
 | font-feature-settings | ✔ | ✔ | yes |  |
 | font-kerning | ✔ | ✔ | yes |  |
 | font-size-adjust | ✔ | ✔ | yes |  |
-| height | ❌ |  | no |  |
+| height | ❌ | ❌ | no |  |
 | hyphens | ✔ | ✔ | yes |  |
 | letter-spacing | ✔ | ✔ | yes |  |
 | line-break | ✔ | ✔ | yes |  |
@@ -659,10 +662,10 @@ For example, it does not include many of the new logical properites such as `inl
 | margin | ✔ | ✔ | no |  |
 | mask | ✔ | ✔ | no | mask-border-source will only supports `<gradient>` functions |
 | mask-border | ✔ | ✔ | no |  |
-| max-height | ❌ |  | no |  |
-| max-width | ❌ |  | no |  |
-| min-height | ❌ |  | no |  |
-| min-width | ❌ |  | no |  |
+| max-height | ❌ | ❌ | no |  |
+| max-width | ❌ | ❌ | no |  |
+| min-height | ❌ | ❌ | no |  |
+| min-width | ❌ | ❌ | no |  |
 | opacity | ✔ | ✔ | no |  |
 | outline | ✔ | ✔ | no |  |
 | overflow-wrap | ✔ | ✔ | yes |  |
@@ -687,11 +690,11 @@ For example, it does not include many of the new logical properites such as `inl
 | transform-origin | ✔ |  | no |  |
 | unicode-bidi | ✔ | ✔ | no |  |
 | white-space | ✔ | ✔ | yes |  |
-| width | ❌ |  | no |  |
+| width | ❌ | ❌ | no |  |
 | word-break | ✔ | ✔ | yes |  |
 | word-spacing | ✔ | ✔ | yes |  |
 | word-wrap | ✔ | ✔ | yes |  |
-| writing-mode | ✔ | ✔ | yes |  |
+| writing-mode | ✔ | ❌ | yes |  |
 
 ### Limitations
 
