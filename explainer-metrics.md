@@ -88,21 +88,12 @@ Metrics provide:
 # Overview: data model to metrics to rendering
 
 The `FormattedText` constructor's static method `format` (described in the 
-[data model](explainer-datamodel.md)) returns an instance of a `FormattedText` object, which
-internally holds all of the formatted text ready for rendering and is also the root object of
-the metrics describe in this explainer.
-
-The `FormattedText` object retains the formatted structure of the input text, and offers APIs to
-query the total bounding box of the text as constrained at any given moment; APIs to adjust the 
-constraints for a given line and its descendents resulting in text that wraps at different 
-specified lengths, and other APIs for serving common use cases for which an understanding of the
-formatted text and its relationship to the input text is important (e.g., editing cases).
-
-This object **is updated** as contraints on the lines are changed. Updates and changes may include
-number of lines of text (line break locations), per-line sizes, bounding box values, and related
-mapping back to input text for subsequent fragments. Updates will **not** include changes to the 
-underlying text or style. In order to mutate the text, `format` must be called again with 
-different input (which will return a new object; a different instance of a `FormattedText` object).
+[data model](explainer-datamodel.md)) returns an instance of a `FormattedText` object, which is
+a container object for all the lines of text that have been formatted. The `FormattedText` 
+constructor's static method `lines` returns an iterator used to get individual `FormattedTextLine`
+objects, which are "container-less" lines. Both the `FormattedText` and `FormattedTextLine` instances
+are metrics objects, retaining the formatted structure of the input text and offer various APIs for
+getting metrics and bounds (described later).
 
 The `FormattedText` is a container for all the input data model's metrics. It contains the APIs
 to get additional lines, fragments, and glyph information. The object hierarchy is shown below (note
