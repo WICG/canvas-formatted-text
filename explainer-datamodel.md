@@ -170,11 +170,11 @@ constraint (4th parameter) will occur in the vertical direction. For specified w
 `vertical-rl` (e.g., Chinese) the inline-size constraint affects the vertical direction, with overflow
 occurring horizontally.
 
-<small>*HTML will handle `writing-mode` set on _inline_ elements (when the result is an orthogonal 
+<sub>*HTML will handle `writing-mode` set on _inline_ elements (when the result is an orthogonal 
 writing mode direction) by "blockifying" the inline container into an inline-block in order to support the
 writing mode. This conversion from inline content to inline block is not supported in the Formatted
 Text input model, and thus paragraphs of text with nested orthogonal writing mode directions are not
-supported.</small>
+supported.</sub>
 
 **Note**: [Issue 43: What should constraining the block-progression direction do?](https://github.com/WICG/canvas-formatted-text/issues/43) tracks an unresolved issue about allowing constraints in both directions.
 
