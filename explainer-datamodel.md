@@ -248,42 +248,13 @@ function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200,
 *Note*, the iterator's [Symbol.iterator] function (used by the iterator protocol in for..of loops) 
 is a self-reference to the same iterator object, allowing convenient use inside of for..of loops.
 
-### Fast-forwarding of line iteration
-
-In some cases, the only tweaking that needs to be done comes early in an algorithm (such as in the 
-above algorithm, where once the line length (inlineSize) adjustment has been made to the iterator,
-the rest of the lines will not need any adjustments.
-
-The iterator can be quickly "fast-forwarded" by supplying the number of desired next lines in the 
-first parameter to the call to `next()`:
-
-```js
-// In each case, the return result from next() follows the JS iterator protocol, and will return an
-// object with a "value" and "done" property. The "value" property's value will be as indicated below.
-
-// Have the iterator generate the next line (1 line at a time is the default).
-formattedTextIterator.next();
-formattedTextIterator.next(1); // returns the next FormattedTextLine instance.
-
-// Have the iterator generate the next two lines.
-formattedTextIterator.next(2); // returns an array of up to two FormattedTextLine instances.
-
-// Have the iterator generate the next 100 lines.
-formattedTextIterator.next(100); // returns an array of up to 100 FormattedTextLine instances.
-
-// Have the iterator generate all the next lines.
-formattedTextIterator.next(0);
-formattedTextIterator.next(-1); 
-// returns an array containing all of the remaining lines (for any integer value of <= 0).
-```
-
 ### Rewinding line iteration
 
-In some scenarios (for example, an algorithm for a balanced multi-column line layout), it is sometimes
-necessary to "roll-back" and reprocess a line that was previously produced by the iterator to adjust 
-its line-break constraints.
+In some scenarios (for example, an algorithm for a balanced multi-column line layout, shown later), 
+it is sometimes necessary to "roll-back" and reprocess a line that was previously produced by the 
+iterator to adjust its line-break constraints.
 
-⚠️**Issue**: traditional JS iterator protocol does not expect rewinding/skipping behavior. This needs careful 
+⚠️**Issue**: traditional JS iterator protocol does not expect rewinding behavior. This needs careful 
 review and consideration for any unexpected language side-effects.
 
 The `lines` iterator keeps track of the number of lines that it has produced so far via the `lineCount` 
@@ -321,23 +292,29 @@ function multiColumnFiller( text, col1Box, col2Box, renderFunc ) {
   
   // What is the ratio of the first column's width compared to the total width?
   let ratio = col1_inlineSize / ( col1_inlineSize + col2_inlineSize );
-  // Naïvely then, 'ratio' of the total number of lines that will fit in col1 will stay in col1
-  //  the rest will be balanced to col2.
+  // Naïvely then, 'ratio' of the total number of lines that will fit in col1 
+  // will stay in col1, the rest will be balanced to col2.
   
   // How many lines fit in col1 given its size?
   let lineIter = FormattedText.lines( text, null, col1_inlineSize );
-  let col1Lines = lineIter.next(0).value; // process all the lines and return them in an array
+  let col1Lines = [];
+  for ( let line of lineIter ) {  // process all the lines and return them in an array
+    col1Lines.push( line );
+  }
   
   // Rough-out the line at which to move the rest to column 2
   let cutLineIndex = Math.floor( ratio * lineIter.lineCount );
   // Discard the lines (inclusive) after this cut line from column 1's lines.
   col1Lines.splice( cutLineIndex );
   
-  // Reset the iterator to the cut-line index, adjust the iterator's inlineSize constraint, and
-  //  get the rest of the lines
+  // Reset the iterator to the cut-line index, adjust the iterator's inlineSize 
+  // constraint and get the rest of the lines
   lineIter.reset( cutLineIndex );
   lineIter.inlineSize = col2_inlineSize;
-  let col2Lines = lineIter.next(0).value;
+  let col2Lines = [];
+  for ( let line of lineIter ) {
+    col2Lines.push( line );
+  }
   
   // Assign positions for each of the lines in both columns and render (left-justified)
   // First column location
