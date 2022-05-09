@@ -140,8 +140,8 @@ property is also specified (overridden) on an individual text object (in the fir
 
 The inline-size constraint is the 3rd parameter for both formatting functions. `format` has
 an additional 4th parameter for the block-size constraint. Because the `format` function 
-produces all the lines of text at once, the block-size constraint allows the author to specify 
-a maximum bound for the container in both directions.
+produces all the lines of text at once, the block-size constraint (param 4) allows the author to
+specify a maximum bound for the container in both directions.
 
 To specify an inline-direction constraint for line wrapping with the `lines` iterator:
 
@@ -373,7 +373,7 @@ FormattedText.format( [ "The quick ",
 ```
 
 ```html
-<div style="width:150px">
+<div style="width:150px;height:100px">
   <span id="meta_object">
     <span>The quick </span>
     <span style="color: brown; font-weight: bold">brown</span>
