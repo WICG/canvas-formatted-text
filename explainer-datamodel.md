@@ -596,13 +596,13 @@ dictionary FormattedTextRun : FormattedTextMetadata {
 interface FormattedTextIterator {
   readonly attribute unsigned long lineCount;
   FormattedTextIterator [Symbol.iterator](); // returns self
-  FormattedTextIteratorProtocolResult next( long additionalLines = 1 );
+  FormattedTextIteratorProtocolResult next();
   attribute double inlineSize;
   void reset( long lineIndex );
 };
 
 dictionary FormattedTextIteratorProtocolResult {
-  (FormattedTextLine? or sequence<FormattedTextLine>) value;
+  FormattedTextLine? value;
   boolean done;
 };
 ```
