@@ -33,7 +33,7 @@ An example usage of `drawFormattedText`:
 let formattedText = FormattedText.format( [ "the quick ", 
                                             { text: "brown", style: "font-weight:bold" },
                                             "fox jumps over the lazy dog"
-                                          ], "font:18pt Arial", { width: 250 } );
+                                          ], "font:18pt Arial", 250 /* inline size constraint */ );
 // Render to a canvas at (0, 50)
 context.drawFormattedText( formattedText, /*x*/0, /*y*/50 );
 ```
