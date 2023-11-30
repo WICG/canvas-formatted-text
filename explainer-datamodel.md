@@ -396,7 +396,7 @@ direction:
 ```js
 let bold = "font-weight: bold";
 let meta = "writing-mode: vertical-rl; font-size: 36pt";
-FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], meta, 200 );
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold } ], meta, 200 );
 ```
 
 [When rendered](explainer-rendering.md), and constrained as indicated, this will render as:
