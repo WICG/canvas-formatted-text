@@ -436,10 +436,10 @@ to reflect the parsed values for read-only inspection following construction:
 
 ```js
 // Save the upright text styles from the previous example for later re-use
-let styles = new FormattedTextStyle( "writing-mode: vertical-lr;" +
-                                     "text-orientation: upright;" +
-                                     "line-height: 2;" + 
-                                     "text-align: center" );
+let styles = new FormattedTextStyle( `writing-mode: vertical-lr;
+                                      text-orientation: upright;
+                                      line-height: 2;
+                                      text-align: center` );
 styles.styleMap.has( "text-orientation" ); // returns true
 styles.styleMap.size; // returns 4, the number of declarations in the map
 for ( let [prop, val] of styles ) { // Enumerate everything in the map
@@ -453,11 +453,11 @@ accept a style text string. For example the following are equivalent:
 ```js
 let bold = "font-weight: bold";
 let vertical = "writing-mode: vertical-rl";
-FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold ], vertical );
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: bold } ], vertical );
 
 let reusableBold = new FormattedTextStyle( "font-weight: bold" );
 let reusableVertical = new FormattedTextStyle( "writing-mode: vertical-rl" );
-FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold ], reusableVertical );
+FormattedText.format( [ "不怕慢，", { text: "就怕站", style: reusableBold } ], reusableVertical );
 ```
 
 ### How much CSS should be supported?
