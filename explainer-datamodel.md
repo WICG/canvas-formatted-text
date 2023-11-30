@@ -220,7 +220,7 @@ function wrapAroundFloatLeftBox( text, cssFont, constraints, box = { width: 200,
 
   // Prepare the input text and get a line iterator
   //  (Set the default inlineSize for line-wrapping to the known constrained space.)
-  let formattedTextIterator = FormattedText.lines( text, cssFont, constraints.width - box.marginRightBottom + box.width );
+  let formattedTextIterator = FormattedText.lines( text, cssFont, constraints.width - box.marginRightBottom - box.width );
   
   // sum of line metrics (collected from line instances)
   let lineHeightTotal = 0;
