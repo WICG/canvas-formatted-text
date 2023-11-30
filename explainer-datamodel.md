@@ -408,11 +408,11 @@ possible:
 
 ```js
 let bold = "font-weight:bold";
-let styles  = "writing-mode: vertical-lr;";
-    styles += "text-orientation: upright;";
-    styles += "line-height: 2;";
-    styles += "text-align: center;";
-    styles += "font-size: 12pt";
+let styles = `writing-mode: vertical-lr;
+              text-orientation: upright;
+              line-height: 2;
+              text-align: center;
+              font-size: 12pt`;
 FormattedText.format( [ "It's better to make slow progress", 
                         { text: " than no progress at all", style: bold }
                       ], styles, 250 );
