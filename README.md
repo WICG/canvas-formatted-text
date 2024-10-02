@@ -1,3 +1,5 @@
+**Note:** This effort has been superceded by the [**Canvas placeElement()**](https://github.com/WICG/canvas-place-element) proposal.
+
 Welcome!
 =============
 This is the home for the **Formatted Text** incubation effort. There are several explainers
